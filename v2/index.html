@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <script src="js/v2_static_api_shim.js"></script>
+  <meta name="theme-color" content="#f3f1ec" />
+  <title>TheHumanProject v2 — NIH HRA 3D Reference Atlas, Coupled Biophysics &amp; Health Twin</title>
+  <link rel="stylesheet" href="css/atlas_v2.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#atlas" id="brand-home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-title">TheHumanProject</span>
+      <span class="brand-ver">v2.0 · HRA 3D + ODE</span>
+    </a>
+
+    <nav class="nav-tabs" role="tablist" aria-label="Primary workspaces">
+      <button type="button" class="nav-tab active" role="tab" aria-selected="true" data-view="atlas">3D Body &amp; Biophysics</button>
+      <button type="button" class="nav-tab" role="tab" aria-selected="false" data-view="twin">Personal Health Twin (.FIT + Labs)</button>
+      <button type="button" class="nav-tab" role="tab" aria-selected="false" data-view="pilot">Genomics &times; Rhythm Pilot &amp; Multi-Agent</button>
+      <button type="button" class="nav-tab" role="tab" aria-selected="false" data-view="graph">Knowledge Graph</button>
+      <button type="button" class="nav-tab" role="tab" aria-selected="false" data-view="sql">SQLite &amp; Provenance</button>
+    </nav>
+
+    <div class="search-wrap">
+      <input id="global-search" class="search-input" type="search" placeholder="Search 3,501 UBERON organs, genes, drugs, diseases..." autocomplete="off" aria-label="Search anatomical structures, genes, diseases, and drugs" />
+      <div id="search-dropdown" class="search-results" hidden></div>
+    </div>
+
+    <a href="../" class="btn" style="text-decoration:none;white-space:nowrap" title="Back to Co-Founder Hub">&larr; Hub</a>
+    <a href="../mobile/" class="btn btn-accent" style="text-decoration:none;white-space:nowrap" title="Open Superhuman Participant Phone App (Desktop Bezel &amp; Mobile PWA)">Phone App</a>
+    <button type="button" id="theme-btn" class="btn" title="Toggle light/dark mode">Theme</button>
+  </header>
+
+  <!-- =====================================================================
+       VIEW 1: 3D NIH HRA REFERENCE BODY + COUPLED BIOPHYSICAL ODE SIMULATOR
+       ===================================================================== -->
+  <main id="view-atlas" class="workspace-view">
+    <div class="atlas-grid">
+      <!-- Left Dissection & Organ Systems Rail -->
+      <aside class="left-rail" aria-label="Anatomical systems and dissection controls">
+        <div>
+          <div class="rail-section-title">10 Human Organ Systems</div>
+          <div id="system-rail-list" class="sys-list"></div>
+        </div>
+
+        <div>
+          <div class="rail-section-title">Anatomical Tissue Layers</div>
+          <div class="layer-toggles">
+            <button type="button" class="layer-pill" data-layer="organs" aria-pressed="true"><span>Visceral Organs</span><span class="mono" id="cnt-layer-organs">570</span></button>
+            <button type="button" class="layer-pill" data-layer="vasculature" aria-pressed="true"><span>Vasculature</span><span class="mono" id="cnt-layer-vasc">106</span></button>
+            <button type="button" class="layer-pill" data-layer="skeleton" aria-pressed="true"><span>Full Skeleton</span><span class="mono" id="cnt-layer-skel">313</span></button>
+            <button type="button" class="layer-pill" data-layer="musculature" aria-pressed="false" id="pill-layer-muscles"><span>Musculature</span><span class="mono" id="cnt-layer-musc">177</span></button>
+            <button type="button" class="layer-pill" data-layer="skin" aria-pressed="true" style="grid-column: 1 / -1"><span>Translucent Skin Shell (1.82m VHM)</span><span class="mono">ON</span></button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <label for="explode-slider"><span>Exploded Dissection</span><span id="explode-val" class="mono">0%</span></label>
+          <input id="explode-slider" type="range" min="0" max="100" value="0" />
+        </div>
+
+        <div class="control-row">
+          <div class="rail-section-title" style="margin-bottom:2px">Surgical Cross-Section Plane</div>
+          <div class="seg-row" id="clip-axis-group">
+            <button type="button" class="seg-btn active" data-axis="off">Off</button>
+            <button type="button" class="seg-btn" data-axis="x">Sagittal</button>
+            <button type="button" class="seg-btn" data-axis="z">Coronal</button>
+            <button type="button" class="seg-btn" data-axis="y">Axial</button>
+          </div>
+          <label for="clip-slider" style="margin-top:4px"><span>Slice Depth</span><span id="clip-val" class="mono">0.00</span></label>
+          <input id="clip-slider" type="range" min="-100" max="100" value="0" />
+        </div>
+
+        <div>
+          <div class="rail-section-title">12 Experimental 3D PDB Proteins</div>
+          <div id="rail-pdb-chips" class="chip-wrap"></div>
+        </div>
+      </aside>
+
+      <!-- Center 3D WebGL Stage + Coupled RK4 Biophysical Telemetry Deck -->
+      <section class="center-stage" aria-label="3D Human Reference Atlas and Live Biophysical Telemetry">
+        <div class="viewport-wrap">
+          <div id="hra-canvas-host"></div>
+
+          <div class="viewport-hud-top">
+            <div class="hud-card" id="load-status-badge">
+              <span class="mono" id="glb-progress-text">Loading 34 3D Reference Organs &amp; Musculoskeletal Atlas...</span>
+            </div>
+            <div class="cam-presets">
+              <button type="button" class="btn btn-sm" data-cam="whole_body">Whole Body</button>
+              <button type="button" class="btn btn-sm" data-cam="thorax">Thorax &amp; Ribs</button>
+              <button type="button" class="btn btn-sm" data-cam="heart">Heart Valves</button>
+              <button type="button" class="btn btn-sm" data-cam="head">Skull &amp; Brain</button>
+              <button type="button" class="btn btn-sm" data-cam="abdomen">Abdomen &amp; Renal</button>
+              <button type="button" class="btn btn-sm" data-cam="knees">Pelvis &amp; Knees</button>
+              <button type="button" class="btn btn-sm" id="toggle-deck-size-btn" title="Expand or compact live ECG &amp; Wiggers telemetry dock">Expand ECG</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="biophysics-deck" id="biophysics-deck">
+          <div class="vitals-grid" aria-live="off">
+            <div class="vital-box"><div class="vital-lbl">Heart Rate</div><div class="vital-val" id="v-hr">68 bpm</div></div>
+            <div class="vital-box"><div class="vital-lbl">Arterial BP</div><div class="vital-val" id="v-bp">119/76</div></div>
+            <div class="vital-box"><div class="vital-lbl">SV · EF · CO</div><div class="vital-val" id="v-co">74mL · 60%</div></div>
+            <div class="vital-box"><div class="vital-lbl">SpO₂ · CaO₂</div><div class="vital-val" id="v-spo2">98.1%</div></div>
+            <div class="vital-box"><div class="vital-lbl">Renal GFR</div><div class="vital-val" id="v-gfr">106 mL/m</div></div>
+            <div class="vital-box"><div class="vital-lbl">Plasma Glu</div><div class="vital-val" id="v-glu">86 mg/dL</div></div>
+          </div>
+
+          <div class="ecg-panel">
+            <div class="canvas-caption ecg-caption">
+              <span><strong>Lead-II ECG</strong> <span id="ecg-rhythm-badge" class="mono">Sinus</span></span>
+              <select id="ecg-twave-select" class="ecg-mode-select" aria-label="ECG T-Wave Morphology">
+                <option value="inverted_ischemic" selected>T&darr; Inverted (-0.45mV)</option>
+                <option value="inverted_strain">T&darr; LV Strain (-0.58mV)</option>
+                <option value="biphasic_wellens">T&plusmn; Biphasic Wellens</option>
+                <option value="upright">T&uarr; Normal Upright</option>
+                <option value="auto">Auto (ODE Coupled)</option>
+              </select>
+            </div>
+            <canvas id="ecg-canvas"></canvas>
+          </div>
+
+          <div class="trace-panel">
+            <div class="canvas-caption">
+              <span><strong>Wiggers ODE</strong> — P<sub>LV</sub> (red) &amp; P<sub>Ao</sub> (amber)</span>
+              <span class="mono" id="sim-mode-badge">Baseline</span>
+            </div>
+            <canvas id="wiggers-canvas"></canvas>
+          </div>
+
+          <div class="pv-panel">
+            <div class="canvas-caption">
+              <span><strong>Live LV P–V Loop</strong></span>
+              <span class="mono" id="pv-edv-esv">mmHg vs mL</span>
+            </div>
+            <canvas id="pv-loop-canvas"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Multi-Scale Biological & Pharmacological Inspector -->
+      <aside class="right-inspector" id="inspector-pane" aria-label="Selected structure multi-scale inspector">
+        <div class="ins-header">
+          <div class="ins-eyebrow" id="ins-ont-id">UBERON:0000948 · SYS:CARDIOVASCULAR</div>
+          <h2 class="ins-title" id="ins-title">Heart</h2>
+          <p class="ins-sub" id="ins-subtitle">Click any 3D sub-mesh (cardiac valves, chambers, papillary muscles, lung lobes, Allen brain regions, kidneys, vessels) to inspect its cellular &amp; molecular cascade.</p>
+        </div>
+
+        <!-- Disease & ChEMBL Pharmacology Simulator Card -->
+        <div class="card-block">
+          <h3>
+            <span>Pathophysiology &amp; ChEMBL Drug Rescue</span>
+            <button type="button" id="reset-sim-btn" class="btn btn-sm">Reset Healthy</button>
+          </h3>
+          <div class="control-row">
+            <label for="inspector-twave-select"><span>Lead-II ECG Ventricular Repolarization (T-Wave)</span></label>
+            <select id="inspector-twave-select" class="search-input">
+              <option value="inverted_ischemic" selected>Inverted T-Wave — Symmetric Ischemic / Wellens B (-0.45 mV)</option>
+              <option value="inverted_strain">Inverted T-Wave — Deep LV Strain / Apical HCM (-0.58 mV)</option>
+              <option value="biphasic_wellens">Biphasic T-Wave (+/-) — Wellens Type A (+0.19 / -0.38 mV)</option>
+              <option value="upright">Normal Upright T-Wave — Physiological (+0.34 mV)</option>
+              <option value="auto">Auto — Coupled to MONDO Disease &amp; ChEMBL Drug Rescue</option>
+            </select>
+            <div id="twave-mech-note" style="font-size:11.3px;color:var(--ink-2);line-height:1.38">
+              Reversed transmural repolarization gradient (&nabla;APD<sub>90</sub>): epicardial/apical action potential prolongation flips the Lead-II T-wave vector negative (-0.45 mV) below the 0 mV isoelectric line.
+            </div>
+          </div>
+          <div class="control-row" style="margin-top:4px">
+            <label for="disease-select"><span>Perturb Organ with Mined MONDO Disease</span></label>
+            <select id="disease-select" class="search-input"></select>
+          </div>
+          <p id="disease-desc" style="font-size:11.8px;color:var(--ink-2)"></p>
+          <div class="control-row" id="drug-control-box" hidden>
+            <label for="drug-select"><span>Administer Target-Matched ChEMBL Drug</span></label>
+            <select id="drug-select" class="search-input"></select>
+            <label for="drug-dose-slider" style="margin-top:4px">
+              <span>Receptor Occupancy (&theta;)</span>
+              <span id="drug-dose-label" class="mono">75%</span>
+            </label>
+            <input id="drug-dose-slider" type="range" min="0" max="100" value="75" />
+            <div id="drug-moa-summary" class="mono" style="font-size:11px;color:var(--ok)"></div>
+          </div>
+        </div>
+
+        <div class="card-block">
+          <h3><span>3D Anatomical Sub-Meshes in Organ</span><span id="ins-mesh-count" class="mono">0</span></h3>
+          <div id="ins-submeshes" class="chip-wrap"></div>
+        </div>
+
+        <div class="card-block">
+          <h3><span>NIH ASCT+B Cell Types &amp; HGNC Biomarkers</span><span id="ins-cell-count" class="mono">0</span></h3>
+          <div id="ins-cells" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+
+        <div class="card-block">
+          <h3><span>Open Targets Genes &amp; 3D PDB Structures</span><span id="ins-gene-count" class="mono">0</span></h3>
+          <div id="ins-genes" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+
+        <div class="card-block">
+          <h3><span>Enriched Reactome Pathways (FDR &lt; 0.05)</span><span id="ins-pw-count" class="mono">0</span></h3>
+          <div id="ins-pathways" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       VIEW 2: PERSONAL HEALTH TWIN v2 (BINARY .FIT + LAB CSV + DIET + ODE)
+       ===================================================================== -->
+  <section id="view-twin" class="workspace-view" hidden>
+    <div class="scroll-page">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div>
+          <div class="ins-eyebrow">GARMIN .FIT BINARY PROTOCOL + CLINICAL LABS + PRECISION NUTRITION</div>
+          <h1 style="font-size:22px">Personal Health Twin v2 — Coupled to 3D Human Atlas &amp; Hemodynamic ODE</h1>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="twin-preset-select" class="search-input" style="width:auto"></select>
+          <button type="button" id="project-twin-to-3d-btn" class="btn btn-accent">Project My Twin into 3D Body &amp; ODE Simulator &rarr;</button>
+        </div>
+      </div>
+
+      <div class="twin-layout">
+        <!-- Left Ingestion Controls -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card-block">
+            <h3><span>1. Garmin .FIT Binary, ECG &amp; API v2 Ingestion</span></h3>
+            <p style="font-size:12px;color:var(--ink-2)">Upload any native binary <code>.fit</code> activity/HRV file from a Garmin watch or cycling computer (parsed via CRC-16 binary protocol), or log a wearable / 12-lead ECG repolarization pattern.</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="btn" style="cursor:pointer">
+                Upload Garmin <code>.fit</code> Binary
+                <input id="fit-file-input" type="file" accept=".fit,.json" hidden />
+              </label>
+              <button type="button" id="load-sample-fit-btn" class="btn btn-accent">Load Sample <code>.fit</code> Binary</button>
+              <a href="assets/samples/garmin_threshold_run.fit" download class="btn">Download <code>.fit</code></a>
+            </div>
+            <div class="control-row" style="margin-top:6px">
+              <label for="twin-ecg-twave-select"><span>Wearable / 12-Lead ECG T-Wave Morphology</span></label>
+              <select id="twin-ecg-twave-select" class="search-input">
+                <option value="upright">Normal Upright T-Wave (+0.34 mV)</option>
+                <option value="inverted_ischemic">Inverted T-Wave — Symmetric Inferior/Lateral (-0.45 mV)</option>
+                <option value="inverted_strain">Inverted T-Wave — Deep LV Strain / Apical (-0.58 mV)</option>
+                <option value="biphasic_wellens">Biphasic T-Wave (+/-) — Anterior/Lead-II</option>
+              </select>
+            </div>
+            <div id="fit-parse-banner" class="list-item mono" hidden></div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>2. Clinical Blood Panel CSV / JSON</span></h3>
+            <p style="font-size:12px;color:var(--ink-2)">Upload a clinical blood test <code>.csv</code>, <code>.tsv</code>, or <code>.json</code> (auto-converts SI mmol/L &harr; mg/dL across 18 organ-mapped biomarkers).</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="btn" style="cursor:pointer">
+                Upload Blood Lab <code>.csv</code>
+                <input id="blood-csv-input" type="file" accept=".csv,.tsv,.txt,.json" hidden />
+              </label>
+              <button type="button" id="load-sample-blood-btn" class="btn">Load Sample Lab CSV</button>
+              <a href="assets/samples/blood_panel_sample.csv" download class="btn">Download CSV</a>
+            </div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>3. Daily Diet &amp; Micronutrient Log CSV</span></h3>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="btn" style="cursor:pointer">
+                Upload Meal Log <code>.csv</code>
+                <input id="diet-csv-input" type="file" accept=".csv,.tsv,.json" hidden />
+              </label>
+              <button type="button" id="load-sample-diet-btn" class="btn">Load Sample Meal CSV</button>
+            </div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>4. Biophysical ODE Parameterization Preview</span></h3>
+            <div id="twin-ode-preview" class="mono" style="font-size:11.5px;display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+        </div>
+
+        <!-- Right Health Twin Report -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card-block">
+            <h3>
+              <span>10-Organ Readiness Matrix (Click any organ to inspect in 3D)</span>
+              <span id="twin-overall-badge" class="status-pill status-optimal" style="font-size:13px">Readiness: --/100</span>
+            </h3>
+            <div id="twin-organ-grid" class="organ-score-grid"></div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>Cross-Modal Garmin &times; Blood &times; Diet Mechanistic Findings</span></h3>
+            <div id="twin-insights-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:12px">
+            <div class="card-block">
+              <h3><span>Evaluated Clinical Blood Biomarkers</span></h3>
+              <div style="max-height:320px;overflow-y:auto">
+                <table class="data-table" id="twin-biomarker-table">
+                  <thead><tr><th>Biomarker</th><th>Value</th><th>Optimal</th><th>Gene</th><th>Status</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-block">
+              <h3><span>Activity-Matched Precision Nutrition</span></h3>
+              <div id="twin-nutrition-bars" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       VIEW 2B: GENOMICS × RHYTHM PILOT & MULTI-AGENT PERSONAL HEALTH COUNCIL
+       ===================================================================== -->
+  <section id="view-pilot" class="workspace-view" hidden>
+    <div class="scroll-page">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+        <div>
+          <div class="ins-eyebrow">BASIC WEARABLE RHYTHMS + VCF/23ANDME GENOMICS + YU EPIGENETIC CLOCK + DS/DE/HC MULTI-AGENT</div>
+          <h1 style="font-size:21px">Genotype &times; Circadian Rhythm &times; Blood Pilot &amp; Dual-Engine ToS Firewall</h1>
+          <p id="pilot-preset-desc" style="font-size:12px;color:var(--ink-2);margin-top:3px"></p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="pilot-preset-select" class="search-input" style="width:auto"></select>
+          <select id="pilot-engine-select" class="search-input" style="width:auto" aria-label="Genomic Engine &amp; Licensing Mode">
+            <option value="sovereign_open" selected>Sovereign Open Engine (Commercial-Safe)</option>
+            <option value="alphagenome2_noncommercial_pilot">AlphaGenome 2 Pilot (Non-Commercial Research ONLY)</option>
+          </select>
+          <label class="chip" style="display:inline-flex;align-items:center;gap:5px">
+            <input id="pilot-commercial-check" type="checkbox" />
+            <span>Test Commercial Firewall</span>
+          </label>
+          <button type="button" id="project-pilot-to-3d-btn" class="btn btn-accent">Project Pilot Twin into 3D Body &amp; ODE &rarr;</button>
+        </div>
+      </div>
+
+      <div id="pilot-firewall-banner" class="card-block" style="margin-bottom:14px"></div>
+      <div id="pilot-parse-banner" class="list-item mono" style="margin-bottom:12px" hidden></div>
+
+      <div class="twin-layout">
+        <!-- Left Column: Rhythm Cosinor + Genome Ingestion + Yu Epigenetics -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card-block">
+            <h3>
+              <span>1. Basic-Data Biological Rhythm Engine (No Genomics Needed)</span>
+              <span id="pilot-rhythm-score" class="status-pill status-optimal">Rhythm: --/100</span>
+            </h3>
+            <p style="font-size:11.8px;color:var(--ink-2)">Captures 24h circadian + 12h ultradian Cosinor harmonics, nocturnal HR dipping, and Sleep Regularity Index purely from optical HR/HRV streams.</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="btn" style="cursor:pointer">
+                Upload 72h Rhythm <code>.csv</code>
+                <input id="pilot-rhythm-input" type="file" accept=".csv,.tsv,.json" hidden />
+              </label>
+              <button type="button" id="load-sample-rhythm-btn" class="btn">Load Sample 72h CSV</button>
+              <a href="assets/samples/wearable_72h_rhythm_sample.csv" download class="btn">Download CSV</a>
+            </div>
+            <div id="pilot-rhythm-kpis" class="vitals-grid" style="margin-top:4px"></div>
+            <div class="trace-panel" style="height:158px">
+              <div class="canvas-caption">
+                <span><strong>24h Folded Cosinor</strong> — HR bpm (red) &amp; Vagal HRV ms (green dashed)</span>
+                <span class="mono">Shaded = Sleep</span>
+              </div>
+              <canvas id="pilot-cosinor-canvas" style="width:100%;flex:1;min-height:0;display:block"></canvas>
+            </div>
+            <div id="pilot-rhythm-findings" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>2. Personal Genome Parser (.VCF / 23andMe / AncestryDNA)</span></h3>
+            <p style="font-size:11.8px;color:var(--ink-2)">Upload a GRCh38 <code>.vcf</code> or consumer raw microarray <code>.txt</code> file (e.g., Dad's non-commercial pilot case study).</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="btn btn-accent" style="cursor:pointer">
+                Upload <code>.vcf</code> / <code>23andMe .txt</code>
+                <input id="pilot-genome-input" type="file" accept=".vcf,.txt,.tsv,.csv,.json" hidden />
+              </label>
+              <button type="button" id="load-sample-vcf-btn" class="btn">Load Dad's <code>.vcf</code></button>
+              <button type="button" id="load-sample-23andme-btn" class="btn">Load 23andMe <code>.txt</code></button>
+              <a href="assets/samples/dads_pilot_case_study.vcf" download class="btn btn-sm">Get .VCF</a>
+            </div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>3. Yu Project CpG Epigenetic Clock Bridge</span></h3>
+            <div id="pilot-yu-epigenetics"></div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>4. Coupled 0D Biophysics ODE Modifiers (Rhythm &times; Labs &times; DNA)</span></h3>
+            <div id="pilot-ode-mods" class="mono" style="font-size:11.3px;display:flex;flex-direction:column;gap:3px"></div>
+          </div>
+        </div>
+
+        <!-- Right Column: Genetics vs Lifestyle Attribution + Multi-Agent Council + Variants -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card-block">
+            <h3>
+              <span>Genetics vs. Modifiable Lifestyle Attribution Decomposition</span>
+              <span id="pilot-lifestyle-headline" class="status-pill status-optimal"></span>
+            </h3>
+            <div id="pilot-attribution-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:8px"></div>
+          </div>
+
+          <div class="card-block">
+            <h3>
+              <span>Modular Multi-Agent Personal Health Council (DS + DE + HC Orchestrator)</span>
+              <span id="pilot-council-meta" class="mono" style="font-size:10.8px;color:var(--ok)"></span>
+            </h3>
+            <div style="display:flex;gap:6px">
+              <input id="pilot-agent-query" class="search-input" type="text" placeholder="Ask the DS + DE + HC Multi-Agent Council (e.g., How much of Dad's ApoB &amp; glucose is genetics vs meal timing?)..." style="flex:1" />
+              <button type="button" id="pilot-run-query-btn" class="btn btn-accent">Run Council</button>
+            </div>
+            <div class="chip-wrap">
+              <button type="button" class="chip" data-pilot-prompt="Separate genetic predisposition from live rhythm and blood biomarkers for this profile.">Genetics vs. Live State</button>
+              <button type="button" class="chip" data-pilot-prompt="Give me a concrete 14-day meal timing, fiber, Zone 2, and sauna coaching plan.">14-Day Optimization Plan</button>
+              <button type="button" class="chip" data-pilot-prompt="Explain how TCF7L2 rs7903146 and APOE rs429358 interact with evening meals and saturated fat.">TCF7L2 &amp; APOE Mechanism</button>
+              <button type="button" class="chip" data-pilot-prompt="I have crushing chest pain and fainting.">Test Harm/Red-Flag Guardrail</button>
+            </div>
+            <div id="pilot-council-consensus"></div>
+            <div id="pilot-agents-grid" class="pilot-agents-grid"></div>
+            <div id="pilot-reflection-checks" class="chip-wrap"></div>
+          </div>
+
+          <div class="card-block">
+            <h3><span>Evaluated GRCh38 Panel, Open Constraints &amp; AlphaGenome Atlas Links</span></h3>
+            <div style="overflow-x:auto">
+              <table class="data-table" id="pilot-variants-table">
+                <thead>
+                  <tr>
+                    <th>Gene / Organ</th>
+                    <th>GRCh38 / Call</th>
+                    <th>Mechanism &amp; GTEx Tissues</th>
+                    <th>Engine / Atlas</th>
+                    <th>Precision Lifestyle Optimization</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       VIEW 3: MULTI-SCALE INTERACTIVE KNOWLEDGE GRAPH
+       ===================================================================== -->
+  <section id="view-graph" class="workspace-view" hidden>
+    <div style="display:grid;grid-template-rows:auto 1fr;height:100%">
+      <div style="padding:10px 18px;border-bottom:1px solid var(--rule);display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <strong>Multi-Scale Ontology Graph</strong>
+        <select id="graph-sys-select" class="search-input" style="width:auto"></select>
+        <span style="font-size:12px;color:var(--ink-2)">Columns: UBERON 3D Structures &rarr; CL Cell Types &rarr; HGNC/UniProt Genes &rarr; MONDO Diseases &rarr; ChEMBL Drugs &amp; 3D PDBs (Click any node to jump)</span>
+      </div>
+      <div style="position:relative;width:100%;height:100%;background:var(--paper)">
+        <canvas id="kg-canvas" style="width:100%;height:100%;display:block"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       VIEW 4: LIVE SQLITE WORKBENCH & DATA PROVENANCE
+       ===================================================================== -->
+  <section id="view-sql" class="workspace-view" hidden>
+    <div class="scroll-page" style="display:flex;flex-direction:column;gap:16px">
+      <div>
+        <div class="ins-eyebrow">READ-ONLY SQLITE 3 + FTS5 ENGINE · 4.71 MB LIVE DATABASE</div>
+        <h1 style="font-size:21px">Multi-Scale Human Physiology SQL Workbench &amp; Provenance</h1>
+      </div>
+
+      <div class="card-block">
+        <h3><span>Preset Analytical Queries</span></h3>
+        <div id="sql-preset-chips" class="chip-wrap"></div>
+        <textarea id="sql-editor" rows="5" class="search-input mono" style="width:100%;margin-top:6px"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span id="sql-status" class="mono" style="font-size:12px;color:var(--ink-2)">Ready</span>
+          <button type="button" id="run-sql-btn" class="btn btn-accent">Execute SQL Query</button>
+        </div>
+        <div style="max-height:340px;overflow:auto;border:1px solid var(--rule);border-radius:4px;background:var(--paper)">
+          <table class="data-table" id="sql-result-table"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <h3><span>Live Data Mining Provenance &amp; Scientific Attributions</span></h3>
+        <table class="data-table" id="provenance-table">
+          <thead><tr><th>Source ID</th><th>Database / Ontology</th><th>Release</th><th>Records Mined</th><th>License</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Floating 3D Raycast Tooltip -->
+  <div id="mesh-hover-tooltip" hidden></div>
+
+  <!-- =====================================================================
+       REAL 3D RCSB PDB MACROMOLECULAR & VARIANT VIEWER MODAL
+       ===================================================================== -->
+  <dialog id="pdb-modal" class="pdb-dialog">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span class="ins-eyebrow" id="pdb-modal-eyebrow">RCSB PDB EXPERIMENTAL 3D STRUCTURE</span>
+        <h3 id="pdb-modal-title" style="font-size:16px;margin-top:2px">MYH7 · 4DB1</h3>
+      </div>
+      <button type="button" id="close-pdb-modal" class="btn">Close &times;</button>
+    </div>
+    <div class="pdb-modal-grid">
+      <div id="pdb-canvas-host"></div>
+      <div style="padding:14px;overflow-y:auto;max-height:460px;display:flex;flex-direction:column;gap:10px">
+        <p id="pdb-modal-role" style="font-size:12.5px;color:var(--ink-2)"></p>
+        <div style="font-size:11.5px;display:flex;gap:10px;flex-wrap:wrap">
+          <span><strong style="color:#d2512d">&bull;</strong> &alpha;-Helix</span>
+          <span><strong style="color:#2c6680">&bull;</strong> &beta;-Sheet</span>
+          <span><strong style="color:#2fb37d">&bull;</strong> Bound Ligand (CPK)</span>
+          <span><strong style="color:#e63946">&bull;</strong> Human Variant Site</span>
+        </div>
+        <div id="pdb-ligand-badges" class="chip-wrap"></div>
+        <div class="rail-section-title" style="margin-top:4px">UniProt Curated Human Missense Variants (Click to Focus 3D Residue)</div>
+        <div id="pdb-variant-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

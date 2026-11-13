@@ -1,0 +1,9 @@
+{
+  "name": "Superhuman participant app",
+  "short_name": "Superhuman",
+  "start_url": "/mobile",
+  "display": "standalone",
+  "background_color": "#f3f2ee",
+  "theme_color": "#f3f2ee",
+  "description": "Prototype app for study participants: wearable and blood data, heat study progress, and before and after results."
+}

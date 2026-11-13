@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <title>Co-Founder Technical Brief &amp; Architecture — Superhuman / TheHumanProject</title>
+  <style>
+    :root {
+      --bg: #f6f4ef; --paper: #ffffff; --ink: #181817; --ink-2: #4a4945; --rule: #dfdcd3; --accent: #b84326;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #121312; --paper: #1a1c1a; --ink: #efede8; --ink-2: #b8b5ad; --rule: #2d2f2d; --accent: #e06344; }
+    }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--ink); margin: 0; padding: 28px 18px 72px; line-height: 1.6; }
+    .wrap { max-width: 920px; margin: 0 auto; background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 28px 32px; }
+    .topnav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+    .topnav a { text-decoration: none; font-size: 13px; font-weight: 600; color: var(--accent); padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px; }
+    h1 { font-size: 26px; margin-top: 28px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+    h2 { font-size: 20px; margin-top: 26px; color: var(--accent); }
+    h3 { font-size: 16px; margin-top: 18px; }
+    p, li { font-size: 14px; color: var(--ink-2); }
+    ul { padding-left: 22px; }
+    code { font-family: var(--mono); font-size: 12.5px; background: var(--bg); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+    pre { background: var(--bg); padding: 14px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--rule); }
+    .tbl-wrap { overflow-x: auto; margin: 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid var(--rule); padding: 7px 10px; text-align: left; vertical-align: top; }
+    th { background: var(--bg); font-weight: 600; }
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 28px 0; }
+    blockquote { border-left: 3px solid var(--accent); margin: 12px 0; padding: 6px 14px; background: var(--bg); border-radius: 0 6px 6px 0; }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'neutral' });
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="topnav">
+      <a href="../">&larr; Co-Founder Hub</a>
+      <a href="../v2/">Open v2 3D Website</a>
+      <a href="../mobile/">Open Phone App</a>
+      <a href="#arch">Jump to Data Mining &amp; Architecture Diagrams</a>
+    </nav>
+    <h1>Executive Meeting Pack — Kas &amp; Kevin John (Friday, 13 November 2026)</h1>
+<p><strong>Prepared</strong>: Thursday evening, 12 November 2026 (AEDT)</p>
+<p><strong>Scope</strong>: Complete technical, strategic, legal/ToS, and live-software implementation of the 12/11/2026 WhatsApp thread + [Google Health Agent.pdf](file:///c:/Users/kasim/projects/TheHumanProject/Google%20Health%20Agent.pdf) + [Yu Project.pdf](file:///c:/Users/kasim/projects/TheHumanProject/Yu%20Project/Yu%20Project.pdf).</p>
+<blockquote><strong>MANDATORY RESEARCH &amp; NON-DIAGNOSTIC NOTICE</strong>: All genomic, epigenetic, circadian rhythm, and multi-agent capabilities in this repository are for <strong>research and non-diagnostic lifestyle/wellness simulation only</strong>. Google DeepMind&#x27;s <strong>AlphaGenome / AlphaGenome 2</strong> and <strong>AlphaGenome Atlas</strong> (<code>https://deepmind.google.com/science/alphagenome/</code>) are strictly restricted to <strong>non-commercial research</strong> and <strong>must never be used for clinical or medical diagnosis, prognosis, or treatment decisions</strong>, nor incorporated into commercial revenue-generating products without an explicit commercial agreement from Google DeepMind.</blockquote>
+<hr/>
+<h2>1. Tomorrow&#x27;s Schedule &amp; UNE Grant Synergy (Friday, 13 Nov 2026 · AEDT)</h2>
+<p>Checked live against your connected Google Calendars (<code>kasimirpgregory@gmail.com</code> + <code>UNE</code>):</p>
+<ul>
+<li><strong>All-Day Milestone (<code>Primary</code>)</strong>: <strong><code>DUE: UNE Internal Research Funding Scheme (IRFS) 2027 application</code></strong> (single-PDF submission via Pure Portal).</li>
+</ul>
+<ul>
+<li><em>Strategic Angle</em>: Non-commercial academic pilot validation (biological rhythms + epigenetic clock + sovereign vs. AlphaGenome 2 regulatory benchmarking) aligns cleanly with university research scope while keeping commercial product IP cleanly separated!</li>
+</ul>
+<ul>
+<li><strong>Booked <code>UNE</code> Blocks Tomorrow</strong>:</li>
+</ul>
+<ul>
+<li><code>11:00 am – 12:00 pm AEDT</code>: Busy (<code>UNE</code>)</li>
+</ul>
+<ul>
+<li><code>12:30 pm – 1:00 pm AEDT</code>: Busy (<code>UNE</code>)</li>
+</ul>
+<ul>
+<li><code>2:00 pm – 3:00 pm AEDT</code>: Busy (<code>UNE</code>)</li>
+</ul>
+<ul>
+<li><code>4:00 pm – 5:00 pm AEDT</code>: Busy (<code>UNE</code>)</li>
+</ul>
+<ul>
+<li><strong>Best Open Windows to Meet Kevin John</strong>:</li>
+</ul>
+<ul>
+<li><strong>09:00 am – 11:00 am</strong>, <strong>1:00 pm – 2:00 pm</strong>, <strong>3:00 pm – 4:00 pm</strong>, or <strong>after 5:00 pm AEDT</strong>.</li>
+</ul>
+<hr/>
+<h2>2. What Google DeepMind Announced (<code>x.com/GoogleDeepMind/status/2120532824465805749</code>)</h2>
+<ul>
+<li><strong>Model</strong>: <strong>AlphaGenome 2</strong> (announced 11 Nov 2026; [21.6 MB Paper PDF saved locally](file:///c:/Users/kasim/projects/TheHumanProject/papers_and_references/GoogleDeepMind_2026_11_11_AlphaGenome_2_Paper.pdf)).</li>
+</ul>
+<ul>
+<li><strong>What Changed from v1</strong>: Upgrades from bulk tissue tracks to <strong>single-cell conditional DNA sequence modeling</strong> across <strong>~1 megabase (1,000,000 bp)</strong> windows using Feature-wise Linear Modulation (<strong>FiLM</strong>) conditioned on cell-type/state embeddings. Predicts single-cell RNA-seq expression, chromatin accessibility (scATAC/DNase), TF binding (ChIP), splicing junctions, and <strong>CpG DNA methylation</strong> (bridging directly into the <strong>Yu Project</strong> methylation axis).</li>
+</ul>
+<ul>
+<li><strong>Exact Licensing Reality (Confirming Kas&#x27;s 3:47 pm Message)</strong>:</li>
+</ul>
+<p>  1. <strong>Free API &amp; Atlas = Non-Commercial Research ONLY</strong> (<code>https://deepmind.google.com/science/alphagenome/</code>).</p>
+<p>  2. <strong>Clinical / Medical Diagnosis = Strictly Prohibited</strong> across all public tiers.</p>
+<p>  3. <strong>Commercial Use = Locked behind private enterprise preview / custom DeepMind licensing</strong>.</p>
+<hr/>
+<h2>3. Strategic Architecture: &quot;Somewhere in the Middle&quot; + IP Firewall Against Google</h2>
+<div class="tbl-wrap"><table><thead><tr><th>Strategic Question (WhatsApp Thread)</th><th>Implemented Engineering &amp; Business Solution</th></tr></thead><tbody>
+<tr><td><strong>Kevin (3:45–3:46 pm)</strong>: <em>&quot;Even without fancy genomics we can quite easily capture rhythms with basic data — it&#x27;s the phenotype that kills you. Pharma clears genetic causes; maybe we are somewhere in the middle.&quot;</em></td><td><strong>Tier 1 Product Core (<code>rhythm_engine.py</code>)</strong>: Extracts 24h circadian + 12h ultradian Cosinor harmonics, nocturnal HR dipping %, Sleep Regularity Index (SRI), and HR-HRV antiphase coherence <strong>purely from basic optical HR/wearables</strong>. Zero DNA required to onboard users, prove daily value, and monetize immediately.</td></tr>
+<tr><td><strong>Kas (3:43 pm)</strong>: <em>&quot;Tying genome into blood and other biomarkers gives a live snapshot of the person&#x27;s state and we can more easily determine lifestyle factors vs genetic.&quot;</em></td><td><strong>Tier 2 Multi-Modal Attribution (<code>genomics_pilot_engine.py</code> + <code>Yu Project</code>)</strong>: Combines germline variants (<code>VCF</code>/<code>23andMe</code>), CpG epigenetic clock residuals (<code>MethylNet</code>/<code>ElasticNet</code>), serum labs, and 72h Cosinor rhythms to decompose 6 organ axes into <strong>Fixed Genetic Sensitivity % vs. Modifiable Lifestyle Lever %</strong>.</td></tr>
+<tr><td><strong>Kas (3:47 &amp; 3:54 pm) &amp; Kevin (3:48 pm)</strong>: <em>&quot;Test viability on Dad&#x27;s genome non-commercially... cautious chatting to Google cause they can take an idea and run with billions.&quot;</em></td><td><strong>Strict Dual-Engine Clean-Room Firewall</strong>: &lt;br&gt;1. <strong><code>sovereign_open</code> (Default, 100% Commercial-Safe)</strong>: Built entirely on open public reference data (<strong>gnomAD v4 GRCh38 + GTEx v8 + Open Targets v4 + Reactome + Yu MethylNet + 0D RK4 ODE</strong>). Zero Google AlphaGenome code, weights, or API outputs touch our commercial engine.&lt;br&gt;2. <strong><code>alphagenome2_noncommercial_pilot</code> (Isolated Research Sandbox)</strong>: Hard-blocks <code>commercial_context=True</code>, generates AlphaGenome Atlas 1-based GRCh38 links, and benchmarks whether single-cell non-coding scores add meaningful signal on Dad&#x27;s genome before we ever consider approaching DeepMind or rebuilding a lightweight open sequence head ourselves.</td></tr>
+</tbody></table></div>
+<h3>Protocol Before Ever Contacting Google / DeepMind</h3>
+<p>1. <strong>Never pitch raw product architecture or proprietary longitudinal phenotype-coupling math</strong> in exploratory calls without mutual written confidentiality, and assume large tech partners have parallel internal teams (<em>Heydari &amp; Metwally et al., Nature Nov 2026</em> proves Google already has an internal Personal Health Agent research group!).</p>
+<p>2. <strong>Keep our moat in the Coupled Multi-Scale State Engine</strong>, NOT in raw DNA-to-track prediction:</p>
+<ul>
+<li>Pharma owns CRISPR/siRNA gene-cause clearing; Google owns 1 Mb foundational sequence pretraining; <strong>we own the real-time individual phenotype × circadian rhythm × blood × epigenetic × hemodynamic ODE control loop</strong> (&quot;somewhere in the middle&quot;).</li>
+</ul>
+<p>3. <strong>Clean-Room Rule</strong>: Never train or distill commercial model weights on <code>AlphaGenome 2</code> API outputs (prohibited by Google&#x27;s Terms of Use). Use open ENCODE cCREs + GTEx eQTLs + gnomAD constraints + Borzoi/Enformer-class open weights if sequence-level regulatory scoring is needed commercially.</p>
+<hr/>
+<h2>4. Kas&#x27;s Dad — Non-Commercial Pilot Case Study Protocol</h2>
+<p>Ready out of the box in [genomics_pilot_engine.py](file:///c:/Users/kasim/projects/TheHumanProject/v2/health_twin/genomics_pilot_engine.py) and the <strong>Genomics × Rhythm Pilot</strong> UI tab:</p>
+<p>1. <strong>Accepted Input Files</strong>: Drop in Dad&#x27;s raw <code>.vcf</code> (WGS/WES) or <code>.txt</code>/<code>.csv</code> (23andMe / AncestryDNA) — parsed <strong>100% locally offline</strong> on your machine (<code>POST /api/v2/pilot/parse-genome</code>) so raw personal DNA never leaves localhost.</p>
+<p>2. <strong>Pair with 2 Weeks of Basic Wearable + Recent Bloods</strong>:</p>
+<ul>
+<li>72h–14d optical HR/HRV/sleep export -&gt; computes nocturnal HR dipping % and Cosinor phase.</li>
+</ul>
+<ul>
+<li>Standard GP blood panel (<code>ApoB</code> or <code>LDL-C/TG</code>, <code>HbA1c</code>, <code>Fasting Glucose</code>, <code>Fasting Insulin</code>, <code>hs-CRP</code>, <code>Ferritin</code>, <code>eGFR</code>, <code>25-OH Vit D</code>).</li>
+</ul>
+<p>3. <strong>What the Pilot Answers in 60 Seconds</strong>:</p>
+<ul>
+<li>Which deviations are <strong>genetically primed</strong> (e.g., <code>TCF7L2 rs7903146</code> evening carb sensitivity, <code>APOE rs429358</code> saturated-fat ApoB sensitivity, <code>AGTR1 rs5186</code> sodium/vascular tone, <code>MTHFR rs1801133</code> folate/riboflavin methylation demand) vs. <strong>purely lifestyle/rhythm driven</strong> (e.g., <code>68%</code> modifiable via earlier dinner timing, viscous fiber, and morning light).</li>
+</ul>
+<ul>
+<li>Side-by-side comparison of <strong><code>Sovereign Open Engine</code></strong> vs. <strong><code>AlphaGenome 2 Non-Commercial Pilot</code></strong> to measure objectively whether AlphaGenome 2 adds incremental value beyond open gnomAD/GTEx/eQTL data!</li>
+</ul>
+<hr/>
+<h2>5. Live 5-Minute Meeting Demo Script (<code>Tomorrow&#x27;s Meeting</code>)</h2>
+<p>1. <strong>Start the Server</strong>:</p>
+<pre><code>   python v2/server.py</code></pre>
+<p>   Open <code>http://127.0.0.1:8765/</code> in browser.</p>
+<p>2. <strong>Minute 1 — 3D Human Atlas + 0D Hemodynamic ODE (<code>Tab 1</code>)</strong>:</p>
+<ul>
+<li>Show the 32 NIH HRA 3D organs, live Lead-II ECG, Wiggers arterial pressure, and LV P–V loop running at 60 fps.</li>
+</ul>
+<p>3. <strong>Minute 2 — Kevin&#x27;s &quot;Basic Data Rhythm&quot; Proof (<code>Tab 3: Genomics × Rhythm Pilot</code>)</strong>:</p>
+<ul>
+<li>Switch preset to <strong><code>Low-Genetic-Risk / High-Phenotype-Strain Shift Worker (41F — &#x27;Phenotype Kills&#x27;)</code></strong>.</li>
+</ul>
+<ul>
+<li>Point to the <strong>24h Folded Cosinor Canvas</strong> (<code>5.2%</code> blunted nocturnal dip, <code>SRI 56</code>) and Attribution Matrix showing <strong><code>84%+ Modifiable Lifestyle</code></strong> despite clean genetics!</li>
+</ul>
+<p>4. <strong>Minute 3 — Kas&#x27;s Dad&#x27;s Pilot &amp; Dual-Engine ToS Firewall (<code>Tab 3</code>)</strong>:</p>
+<ul>
+<li>Select <strong><code>Kas&#x27;s Dad — Non-Commercial Genome × Rhythm × Blood Pilot (63M)</code></strong> (or click <strong><code>Load Dad&#x27;s .vcf</code></strong> / <strong><code>Load 23andMe .txt</code></strong>).</li>
+</ul>
+<ul>
+<li>Toggle engine to <strong><code>AlphaGenome 2 Pilot (Non-Commercial Research ONLY)</code></strong> -&gt; inspect clickable <strong>AlphaGenome Atlas (<code>1-based GRCh38</code>)</strong> variant &amp; 1 Mb locus links.</li>
+</ul>
+<ul>
+<li>Tick <strong><code>Test Commercial Firewall</code></strong> -&gt; watch the automatic ToS guardrail block commercial use on AlphaGenome 2 and seamlessly fail-over to <strong><code>Sovereign Open Engine</code></strong>!</li>
+</ul>
+<p>5. <strong>Minute 4 — Modular Multi-Agent Council (<code>Google Health Agent.pdf</code> Upgraded)</strong>:</p>
+<ul>
+<li>Click <strong><code>Run Council</code></strong> -&gt; show <code>DS</code> (Empirical Bayes + Cosinor), <code>DE</code> (6-layer physiological synthesis), and <code>HC</code> (SMART coaching) reaching consensus in <strong><code>&lt;10 ms</code></strong> vs. Google&#x27;s <strong><code>205,300 ms (6.5 LLM calls)</code></strong>, plus click <strong><code>Test Harm/Red-Flag Guardrail</code></strong> to demonstrate zero-harm clinical escalation.</li>
+</ul>
+<p>6. <strong>Minute 5 — Coupled 3D Projection + Yu Epigenetic Dashboard</strong>:</p>
+<ul>
+<li>Click <strong><code>Project Pilot Twin into 3D Body &amp; ODE -&gt;</code></strong> to drive the 3D beating heart &amp; Windkessel blood pressure from the fused Rhythm × Lab × Genotype parameters; optionally open [Yu Project Dashboard](file:///c:/Users/kasim/projects/TheHumanProject/Yu%20Project/outputs/dashboard/index.html) for deep CpG methylation clustering &amp; MethylNet age residuals.</li>
+</ul>
+<hr/>
+<h2>6. Reference Inventory Downloaded &amp; Indexed in Repo</h2>
+<ul>
+<li>[GoogleDeepMind_2026_11_11_AlphaGenome_2_Paper.pdf](file:///c:/Users/kasim/projects/TheHumanProject/papers_and_references/GoogleDeepMind_2026_11_11_AlphaGenome_2_Paper.pdf) — Official AlphaGenome 2 technical paper (21.6 MB PDF).</li>
+</ul>
+<ul>
+<li>[Heydari_Metwally_2026_Nature_Personal_Health_Agent_FullText.md](file:///c:/Users/kasim/projects/TheHumanProject/papers_and_references/Heydari_Metwally_2026_Nature_Personal_Health_Agent_FullText.md) — Full open-access text of <em>Nature</em> 659, 197–207 (<code>PMC13736220</code>, DOI <code>10.1038/s41586-026-11161-8</code>).</li>
+</ul>
+<ul>
+<li>[Google_Health_Agent_Notes_Transcription.md](file:///c:/Users/kasim/projects/TheHumanProject/papers_and_references/Google_Health_Agent_Notes_Transcription.md) — Verbatim transcription &amp; answers to Kevin&#x27;s <code>Google Health Agent.pdf</code> notes.</li>
+</ul>
+<ul>
+<li>[Levy_2020_MethylNet_FullText.txt](file:///c:/Users/kasim/projects/TheHumanProject/papers_and_references/Levy_2020_MethylNet_FullText.txt) (<code>PMC7076991</code>) &amp; [Clifford_2011_Clustering_FullText.txt](file:///c:/Users/kasim/projects/TheHumanProject/papers_and_references/Clifford_2011_Clustering_FullText.txt) (<code>PMC3268382</code>) — Epigenetic clock &amp; hierarchical methylation clustering references from <code>Yu Project.pdf</code>.</li>
+</ul>
+    <div id="arch" style="margin-top:44px"></div>
+    
+  </div>
+</body>
+</html>

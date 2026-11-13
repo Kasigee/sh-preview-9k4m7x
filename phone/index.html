@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3f2ee" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Superhuman · Participant app</title>
+  <link rel="stylesheet" href="fonts/fonts.css" />
+  <script>
+    try { const t = localStorage.getItem('atlas-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f3f2ee;
+      --paper-2: #ebe9e3;
+      --paper-3: #e2dfd7;
+      --ink: #1b1d1c;
+      --ink-2: #545752;
+      --ink-3: #85877f;
+      --rule: #d5d2c9;
+      --rule-strong: #b9b5aa;
+      --accent: #d2512d;
+      --accent-ink: #ffffff;
+      --accent-soft: rgba(210, 81, 45, 0.1);
+      --ok: #2f7d5b;
+      --warn: #a8701b;
+      --bad: #b83a2e;
+      --cool: #2c6680;
+      --sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      --page: #e7e5df;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --paper: #121413; --paper-2: #1a1c1b; --paper-3: #242725; --ink: #e9e7e1; --ink-2: #aaaba4; --ink-3: #7c7e78;
+        --rule: #2d302e; --rule-strong: #43463f; --accent: #ec6a45; --accent-ink: #1a0b06; --accent-soft: rgba(236, 106, 69, 0.14);
+        --ok: #5cbf8f; --warn: #e0a54a; --bad: #ef7d6f; --cool: #7bb6cf; --page: #0b0c0c;
+      }
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --paper: #121413; --paper-2: #1a1c1b; --paper-3: #242725; --ink: #e9e7e1; --ink-2: #aaaba4; --ink-3: #7c7e78;
+      --rule: #2d302e; --rule-strong: #43463f; --accent: #ec6a45; --accent-ink: #1a0b06; --accent-soft: rgba(236, 106, 69, 0.14);
+      --ok: #5cbf8f; --warn: #e0a54a; --bad: #ef7d6f; --cool: #7bb6cf; --page: #0b0c0c;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--page); color: var(--ink); font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; accent-color: var(--accent); }
+    h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+    p { margin: 0; }
+    a { color: inherit; }
+    button, input, select { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .mono, code { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.9em; }
+
+    /* Desktop: a phone on the right, notes for the person demoing it on the left */
+    .stage { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 360px) 400px; gap: 56px; justify-content: center; align-items: center; padding: 40px 24px; }
+    .notes h1 { font-size: 26px; letter-spacing: -0.02em; }
+    .notes h1::after { content: "."; color: var(--accent); }
+    .notes .sub { color: var(--ink-2); margin-top: 6px; }
+    .notes p { color: var(--ink-2); margin-top: 14px; max-width: 40ch; }
+    .notes label { display: grid; gap: 6px; margin-top: 22px; font-size: 12px; color: var(--ink-3); }
+    .notes select { background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 7px 8px; }
+    .notes .links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+    .notes .fine { font-size: 12px; color: var(--ink-3); margin-top: 22px; }
+
+    .phone { width: 400px; height: min(840px, calc(100dvh - 80px)); background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12); }
+    .app-head { padding: 22px 20px 12px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: end; gap: 10px; }
+    .app-head .who { font-size: 12px; color: var(--ink-3); }
+    .app-head h2 { font-size: 20px; }
+    .device { font-family: var(--mono); font-size: 11px; color: var(--ink-3); text-align: right; }
+    .screen { flex: 1; overflow-y: auto; padding: 4px 20px 28px; scrollbar-width: thin; }
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    .btn { border: 1px solid var(--rule-strong); background: transparent; border-radius: 4px; padding: 6px 11px; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { border-color: var(--ink); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .btn.block { width: 100%; justify-content: center; margin-top: 12px; padding: 9px; }
+
+    section.block { padding: 18px 0; border-bottom: 1px solid var(--rule); }
+    section.block:last-child { border-bottom: 0; }
+    .block > h3 { font-size: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .block > h3 small { font-weight: 400; font-size: 12px; color: var(--ink-3); }
+    .block > .intro { color: var(--ink-2); font-size: 13px; margin-bottom: 10px; }
+
+    .scores { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 18px 0 16px; border-bottom: 1px solid var(--rule); }
+    .score + .score { padding-left: 16px; border-left: 1px solid var(--rule); }
+    .score .label { font-size: 12px; color: var(--ink-3); }
+    .score .num { font: 500 40px/1.1 var(--mono); letter-spacing: -0.03em; margin-top: 2px; }
+    .score .num small { font-size: 14px; color: var(--ink-3); letter-spacing: 0; }
+    .score .bar { height: 3px; background: var(--paper-3); margin: 8px 0 6px; border-radius: 2px; overflow: hidden; }
+    .score .bar i { display: block; height: 100%; background: var(--ink); }
+    .score .note { font-size: 12px; color: var(--ink-2); }
+
+    .item { padding: 12px 0; border-top: 1px solid var(--rule); }
+    .item:first-of-type { border-top: 0; }
+    .item .row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .item strong { font-weight: 600; }
+    .item .text { color: var(--ink-2); font-size: 13px; margin-top: 4px; }
+    .item .meta { color: var(--ink-3); font-size: 12px; margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .item .meta a { color: var(--ink-2); }
+    .flag { font-size: 11px; white-space: nowrap; font-family: var(--mono); }
+    .flag.bad { color: var(--bad); }
+    .flag.warn { color: var(--warn); }
+    .flag.ok { color: var(--ok); }
+    .item.bad { box-shadow: inset 2px 0 0 var(--bad); padding-left: 12px; }
+    .item.warn { box-shadow: inset 2px 0 0 var(--warn); padding-left: 12px; }
+    .disclaimer { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+
+    .sysrow { display: grid; grid-template-columns: minmax(0, 1fr) 90px 30px; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--rule); font-size: 13px; text-decoration: none; }
+    .sysrow:first-of-type { border-top: 0; }
+    .sysrow:hover .n { text-decoration: underline; }
+    .sysrow .track { height: 3px; background: var(--paper-3); border-radius: 2px; overflow: hidden; }
+    .sysrow .track i { display: block; height: 100%; }
+    .sysrow .v { font-family: var(--mono); font-size: 12px; text-align: right; }
+
+    .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+    .tile { padding: 10px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); min-width: 0; }
+    .tile .l { font-size: 11px; color: var(--ink-3); }
+    .tile .v { font: 500 17px/1.3 var(--mono); }
+    .tile .s { font-size: 11px; color: var(--ink-3); }
+
+    .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rule); font-size: 13px; }
+    .field:first-of-type { border-top: 0; }
+    .field .name { min-width: 0; }
+    .field .name small { display: block; color: var(--ink-3); font-size: 11.5px; }
+    .field input { width: 84px; text-align: right; background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 5px 7px; font-family: var(--mono); font-size: 13px; }
+    .field .unit { font-size: 11px; color: var(--ink-3); width: 44px; }
+    .field .inline { flex-wrap: nowrap; flex: none; }
+    .field .name .flag { display: block; }
+    .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .inline input[type="password"], .inline input[type="text"], .grid2 input { flex: 1; min-width: 0; background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 7px 8px; font-size: 13px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .grid2 label { display: grid; gap: 2px; font-size: 11px; color: var(--ink-3); }
+    .grid2 input { font-family: var(--mono); }
+    .file-btn input { display: none; }
+    .status-line { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+
+    /* Study */
+    .study-head { padding: 18px 0 14px; border-bottom: 1px solid var(--rule); }
+    .study-head .kicker { font-size: 12px; color: var(--ink-3); }
+    .study-head h3 { font-size: 19px; margin-top: 2px; }
+    .progress { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 12px 0 6px; }
+    .progress i { height: 6px; background: var(--paper-3); border-radius: 1px; }
+    .progress i.done { background: var(--ink); }
+    .progress i.next { background: var(--accent); }
+    .next-session { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
+    .toggle { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: 4px; overflow: hidden; }
+    .toggle button { border: 0; background: none; padding: 4px 9px; font-size: 12px; cursor: pointer; color: var(--ink-2); white-space: nowrap; }
+    .toggle button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    #study-chart { width: 100%; height: auto; display: block; margin-top: 10px; }
+    #study-chart .axis { stroke: var(--rule-strong); }
+    #study-chart .grid { stroke: var(--rule); }
+    #study-chart .tick { fill: var(--ink-3); font: 10px var(--mono); }
+    #study-chart .line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+    #study-chart .plan { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 3 4; }
+    #study-chart .dot { fill: var(--ink); }
+    #study-chart .dot.last { fill: var(--accent); }
+    #study-chart .lab { fill: var(--ink); font: 500 11px var(--mono); }
+    table.compare { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.compare th, table.compare td { text-align: left; padding: 7px 6px 7px 0; border-top: 1px solid var(--rule); }
+    table.compare thead th { border-top: 0; font-weight: 500; color: var(--ink-3); font-size: 12px; }
+    table.compare td { font-family: var(--mono); font-size: 12.5px; }
+    table.compare td.pending { color: var(--ink-3); font-family: var(--sans); }
+    dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
+    dl.facts dt { color: var(--ink-3); }
+    dl.facts dd { margin: 0; }
+
+    .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--rule); background: var(--paper); padding: 6px 4px calc(8px + env(safe-area-inset-bottom, 0px)); }
+    .tabbar button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--ink-3); cursor: pointer; padding: 4px 0; }
+    .tabbar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .tabbar button[aria-selected="true"] { color: var(--ink); }
+    .tabbar button[aria-selected="true"] span { box-shadow: 0 2px 0 var(--accent); }
+
+    /* Installed app: always full screen, even on a tablet */
+    html.native body { background: var(--paper); }
+    html.native .stage { display: block; padding: 0; }
+    html.native .notes { display: none; }
+    html.native .phone { width: 100%; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+    html.native .app-head { padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+    html.native .phone { max-width: 720px; margin: 0 auto; }
+
+    /* On a phone the frame and notes go away */
+    @media (max-width: 860px) {
+      body { background: var(--paper); }
+      .stage { display: block; padding: 0; }
+      .notes { display: none; }
+      .phone { width: 100%; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+      .app-head { padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <aside class="notes">
+      <h1>Superhuman</h1>
+      <div class="sub">Participant app, prototype</div>
+      <p>What someone taking part in a study would see on their phone: their wearable and blood data, how they're tracking through the heat study, and their before and after results.</p>
+      <p>Everything here is made up. Switch between three example people below.</p>
+      <label for="profile-preset">Example participant
+        <select id="profile-preset">
+          <option value="ENDURANCE_IRON_DEPLETED">Alex, marathon block, low iron</option>
+          <option value="CARDIOMETABOLIC_OPTIMIZATION">Jordan, raised ApoB and HbA1c</option>
+          <option value="PEAK_HOMEOSTASIS">Elena, everything in range</option>
+        </select>
+      </label>
+      <div class="links">
+        <a class="btn primary" href="/">Open 3D Body Atlas</a>
+        <button type="button" class="btn" id="theme-toggle">Light or dark</button>
+      </div>
+      <div id="lan-phone-box" style="margin-top:16px;padding:10px 12px;border:1px solid var(--rule-strong);border-radius:6px;background:var(--paper);font-size:12px">
+        <div style="color:var(--ink-3);margin-bottom:3px">Open live on your phone (same Wi-Fi):</div>
+        <code id="lan-phone-url" style="font-size:12px;word-break:break-all;color:var(--accent);font-weight:600">http://192.168.0.161:8765/mobile</code>
+      </div>
+      <p class="fine">Open this page on a phone for the full-screen version. On iPhone, Share then Add to Home Screen installs it like an app. On Android, Chrome menu &rarr; Add to Home Screen.</p>
+    </aside>
+
+    <div class="phone" id="phone">
+      <header class="app-head">
+        <div>
+          <div class="who" id="user-subtitle">Loading</div>
+          <h2 id="pane-title">Today</h2>
+        </div>
+        <div class="device" id="garmin-badge"></div>
+      </header>
+
+      <main class="screen" id="screen">
+        <!-- Today -->
+        <div class="pane active" id="pane-today">
+          <div class="scores">
+            <div class="score">
+              <div class="label">Overall</div>
+              <div class="num" id="val-overall">0</div>
+              <div class="bar"><i id="bar-overall"></i></div>
+              <div class="note">Average of nine body systems</div>
+            </div>
+            <div class="score">
+              <div class="label">Ready to train</div>
+              <div class="num" id="val-readiness">0</div>
+              <div class="bar"><i id="bar-readiness"></i></div>
+              <div class="note" id="sub-acwr">From HRV, sleep and load</div>
+            </div>
+          </div>
+
+          <section class="block">
+            <h3>What stands out</h3>
+            <div id="insights-list"></div>
+          </section>
+
+          <section class="block">
+            <h3>Worth raising with the study team</h3>
+            <p class="disclaimer">These come from your numbers, not from a doctor. Talk to the study doctor before changing medicine or supplements.</p>
+            <div id="recommendations-list" style="margin-top:6px"></div>
+          </section>
+
+          <section class="block">
+            <h3>By system <small>tap to open in the body atlas</small></h3>
+            <div id="organ-scores-list"></div>
+          </section>
+
+          <section class="block">
+            <h3>Your data</h3>
+            <p class="intro">It's yours. Take a copy any time, or withdraw and have it removed from the study.</p>
+            <div class="inline">
+              <button type="button" class="btn" onclick="downloadHealthReportJson()">Download a copy</button>
+              <button type="button" class="btn" onclick="showWithdraw()">Withdraw</button>
+            </div>
+            <p class="status-line" id="withdraw-msg"></p>
+          </section>
+
+          <section class="block">
+            <h3>Prototype</h3>
+            <p class="intro">All the data is made up. Switch between three example people, or put back the original numbers after editing.</p>
+            <div class="inline">
+              <select id="profile-preset-app" aria-label="Example person" style="flex:1;min-width:0;background:var(--paper);border:1px solid var(--rule-strong);border-radius:4px;padding:7px 8px;font-size:13px;">
+                <option value="ENDURANCE_IRON_DEPLETED">Alex, marathon block, low iron</option>
+                <option value="CARDIOMETABOLIC_OPTIMIZATION">Jordan, raised ApoB and HbA1c</option>
+                <option value="PEAK_HOMEOSTASIS">Elena, everything in range</option>
+              </select>
+              <button type="button" class="btn" onclick="resetExample()">Reset</button>
+            </div>
+            <div class="inline" style="margin-top:10px">
+              <a class="btn" id="atlas-link-app" href="/">Open the body atlas</a>
+              <button type="button" class="btn" onclick="document.getElementById('theme-toggle').click()">Light or dark</button>
+            </div>
+          </section>
+        </div>
+
+        <!-- Study -->
+        <div class="pane" id="pane-study">
+          <div class="study-head">
+            <div class="kicker">Heat study, Sydney</div>
+            <h3>Session <span id="sessions-done">6</span> of 10 done</h3>
+            <div class="progress" id="study-progress" aria-hidden="true"></div>
+            <div class="next-session"><span>Next session</span><strong id="next-session">Thursday 7:30 am, 90 min</strong></div>
+          </div>
+
+          <section class="block">
+            <h3>
+              <span>Same workout, same heat</span>
+              <span class="toggle" role="group" aria-label="Measure shown">
+                <button type="button" id="t-hr" aria-pressed="true">Heart rate</button>
+                <button type="button" id="t-core" aria-pressed="false">Core temp</button>
+              </span>
+            </h3>
+            <p class="intro" id="chart-note">Your heart rate at the end of each session. It falls as your body adapts to the heat.</p>
+            <svg id="study-chart" viewBox="0 0 360 200" role="img"></svg>
+            <p class="disclaimer">Example data for the prototype.</p>
+          </section>
+
+          <section class="block">
+            <h3>Before and after</h3>
+            <p class="intro">The same tests in week 0 and week 3, so you're compared with yourself.</p>
+            <table class="compare" id="compare-table">
+              <thead><tr><th>Measure</th><th>Week 0</th><th>Week 3</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </section>
+
+          <section class="block">
+            <h3>About this study</h3>
+            <dl class="facts">
+              <dt>Sessions</dt><dd>Ten of about 90 minutes over two weeks, then two re-tests</dd>
+              <dt>Measured</dt><dd>Core temperature, heart rate, sweat rate, plasma volume, blood markers</dd>
+              <dt>Cost to you</dt><dd>Nothing</dd>
+              <dt>Consent</dt><dd>Given 14 Oct 2026. Covers this study and future studies on the stored data.</dd>
+              <dt>Contact</dt><dd>Study coordinator, through the lab</dd>
+            </dl>
+          </section>
+        </div>
+
+        <!-- Watch -->
+        <div class="pane" id="pane-garmin">
+          <section class="block">
+            <h3>Garmin <small id="garmin-sync-status">Connected</small></h3>
+            <p class="intro">Reads native binary Garmin <code>.fit</code> workouts (CRC-16 decoded on-device) and <code>.json</code> exports offline.</p>
+            <div class="inline">
+              <button type="button" class="btn" onclick="syncGarminApi()">Load sample data</button>
+              <button type="button" class="btn primary" onclick="loadSampleFitOnPhone()">Try .FIT binary</button>
+              <label class="btn file-btn">Upload .FIT / .JSON
+                <input type="file" id="garmin-file-input" accept=".fit,.json,.tcx,.csv" onchange="handleGarminFileUpload(event)" />
+              </label>
+            </div>
+            <p class="status-line" id="garmin-compliance-text"></p>
+          </section>
+
+          <section class="block">
+            <h3>
+              <span>Resting ECG strip</span>
+              <span class="toggle" role="group" aria-label="ECG T-wave pattern">
+                <button type="button" id="ecg-btn-inv" aria-pressed="true">Inverted T</button>
+                <button type="button" id="ecg-btn-up" aria-pressed="false">Normal T</button>
+              </span>
+            </h3>
+            <p class="intro" id="phone-ecg-note">Lead-II wearable strip showing symmetric T-wave inversion (-0.45 mV) below the 0 mV baseline.</p>
+            <svg id="phone-ecg-svg" viewBox="0 0 360 116" role="img" style="width:100%;height:auto;display:block;margin-top:6px"></svg>
+            <div class="meta" style="margin-top:8px"><a id="phone-ecg-atlas-link" href="/">Open Heart &amp; Live ECG in 3D Body Atlas &rarr;</a></div>
+          </section>
+
+          <section class="block">
+            <h3>Today</h3>
+            <div class="tiles" id="garmin-tiles"></div>
+          </section>
+
+          <section class="block">
+            <h3>Edit and recalculate</h3>
+            <div id="garmin-edit-rows"></div>
+            <button type="button" class="btn primary block" onclick="recalculateReport()">Recalculate</button>
+          </section>
+
+          <section class="block">
+            <h3>Recent activities</h3>
+            <div id="garmin-activities-list"></div>
+          </section>
+        </div>
+
+        <!-- Blood -->
+        <div class="pane" id="pane-blood">
+          <section class="block">
+            <h3>Blood panel <small id="blood-sync-status">12 markers</small></h3>
+            <p class="intro">From your last blood test. Edit any value or upload clinical lab results (<code>.csv</code> or <code>.json</code>, auto-converts SI mmol/L).</p>
+            <div class="inline">
+              <label class="btn file-btn">Upload .CSV / .JSON
+                <input type="file" accept=".csv,.tsv,.txt,.json" onchange="handleBloodFileUpload(event)" />
+              </label>
+              <button type="button" class="btn" onclick="loadSampleBloodCsvOnPhone()">Try sample lab .CSV</button>
+            </div>
+          </section>
+          <section class="block" style="padding-top:6px">
+            <div id="blood-inputs-list"></div>
+            <button type="button" class="btn primary block" onclick="recalculateReport()">Recalculate</button>
+          </section>
+        </div>
+
+        <!-- Food -->
+        <div class="pane" id="pane-diet">
+          <section class="block">
+            <h3>Today's food against what you used <small id="tdee-badge"></small></h3>
+            <p class="intro">Energy used comes from your resting rate plus today's Garmin activity.</p>
+            <div class="tiles" id="nutrition-target-tiles"></div>
+          </section>
+          <section class="block">
+            <h3>Around today's session</h3>
+            <div id="workout-fueling-box"></div>
+          </section>
+          <section class="block">
+            <h3>Foods that help your markers</h3>
+            <div id="biomarker-foods-box"></div>
+          </section>
+          <section class="block">
+            <h3>Meals logged</h3>
+            <div id="diet-meals-list"></div>
+            <div class="grid2" style="margin-top:12px">
+              <label>Meal<input type="text" id="new-meal-name" placeholder="Lunch" style="font-family:var(--sans)" /></label>
+              <label>Energy, kcal<input type="number" id="new-meal-kcal" value="550" /></label>
+              <label>Protein, g<input type="number" id="new-meal-pro" value="42" /></label>
+              <label>Carbohydrate, g<input type="number" id="new-meal-carb" value="68" /></label>
+            </div>
+            <button type="button" class="btn block" onclick="addQuickMeal()">Add meal</button>
+          </section>
+        </div>
+      </main>
+
+      <nav class="tabbar" role="tablist" aria-label="App sections">
+        <button type="button" role="tab" aria-selected="true" data-pane="today" data-title="Today">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span>Today</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-pane="study" data-title="Heat study">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4v10.5a3.5 3.5 0 1 0 4 0V4a2 2 0 0 0-4 0z"/><path d="M12 9v7"/></svg><span>Study</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-pane="garmin" data-title="Watch">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/></svg><span>Watch</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-pane="blood" data-title="Blood">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg><span>Blood</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-pane="diet" data-title="Food">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 4 0V3M9 11v10M16 3c-2 2-2 6 0 8v10"/></svg><span>Food</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <script>window.ATLAS_URL = 'atlas.html'; document.documentElement.classList.add('native');</script>
+  <script src="health_twin_data.js"></script>
+  <script src="health_twin_engine.js"></script>
+  <script>
+    let PRESETS = {};
+    let currentState = null;
+    let currentReport = null;
+
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    // The engine's internal system ids, mapped to the ids the body atlas uses
+    const ATLAS_SYS = { 'SYS:IMMUNE': 'SYS:HEMATO_IMMUNE', 'SYS:MUSCULOSKELETAL': 'SYS:MUSCULO_SENSORY_REPRO' };
+    const ATLAS_URL = window.ATLAS_URL || '/';
+    const ATLAS_IS_V2 = Boolean(window.ATLAS_IS_V2);
+    const atlasLink = (sys, struct, extra = '') => {
+      const mappedSys = ATLAS_IS_V2 ? sys : (ATLAS_SYS[sys] || sys);
+      return `${ATLAS_URL}?sys=${encodeURIComponent(mappedSys)}&struct=${encodeURIComponent(struct)}${extra ? '&' + extra : ''}`;
+    };
+    document.querySelectorAll('a[href="/"]').forEach(a => { a.href = ATLAS_URL; });
+    const toneFor = n => n >= 85 ? 'ok' : (n >= 72 ? 'warn' : 'bad');
+    const titleCase = s => String(s || '').toLowerCase().replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+
+    // ---------------------------------------------------------------- theme
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const root = document.documentElement;
+      const isDark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = isDark ? 'light' : 'dark';
+      try { localStorage.setItem('atlas-theme', root.dataset.theme); } catch (_) {}
+    });
+
+    // ---------------------------------------------------------------- tabs
+    document.querySelectorAll('.tabbar button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabbar button').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+        document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + btn.dataset.pane));
+        document.getElementById('pane-title').textContent = btn.dataset.title;
+        document.getElementById('screen').scrollTop = 0;
+      });
+    });
+
+    // ---------------------------------------------------------------- data
+    // Reports come from health_twin_engine.js (a port of the Python engine), so the app runs offline.
+    // Edits are kept on the device between visits.
+    const STORE_KEY = 'superhuman-participant-v1';
+    let presetKey = 'ENDURANCE_IRON_DEPLETED';
+    const clone = o => JSON.parse(JSON.stringify(o));
+    function saveState() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify({ presetKey, state: currentState })); } catch (_) {}
+    }
+    function initApp() {
+      PRESETS = HealthTwinEngine.presets;
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (_) {}
+      if (saved && PRESETS[saved.presetKey] && saved.state) {
+        presetKey = saved.presetKey;
+        currentState = saved.state;
+      } else {
+        currentState = clone(PRESETS[presetKey]);
+      }
+      syncPresetSelects();
+      currentReport = HealthTwinEngine.evaluate(currentState);
+      renderAll();
+      renderStudy();
+      drawPhoneEcg();
+      refreshLanPhoneUrl();
+    }
+    function syncPresetSelects() {
+      ['profile-preset', 'profile-preset-app'].forEach(id => { document.getElementById(id).value = presetKey; });
+    }
+    function loadPreset(key) {
+      if (!PRESETS[key]) return;
+      presetKey = key;
+      currentState = clone(PRESETS[key]);
+      syncPresetSelects();
+      recalculateReport({ fromForm: false });
+      renderStudy();
+    }
+    function resetExample() { loadPreset(presetKey); }
+    ['profile-preset', 'profile-preset-app'].forEach(id => document.getElementById(id).addEventListener('change', e => loadPreset(e.target.value)));
+
+    function recalculateReport(opts = { fromForm: true }) {
+      if (opts.fromForm !== false && document.getElementById('g-input-rhr')) {
+        const num = id => parseFloat(document.getElementById(id).value);
+        Object.assign(currentState.garmin, {
+          resting_hr_bpm: num('g-input-rhr'), hrv_rmssd_ms: num('g-input-hrv'), vo2_max_ml_kg_min: num('g-input-vo2'),
+          sleep_score: num('g-input-sleep'), active_kcal: num('g-input-kcal'), training_load_acute: num('g-input-load')
+        });
+        document.querySelectorAll('[data-bm-code]').forEach(inp => { currentState.blood_panel.values[inp.dataset.bmCode] = parseFloat(inp.value); });
+      }
+      currentReport = HealthTwinEngine.evaluate(currentState);
+      saveState();
+      renderAll();
+    }
+
+    function syncGarminApi() {
+      const syncData = HealthTwinEngine.syncGarminSandbox();
+      currentState.garmin = syncData.garmin;
+      document.getElementById('garmin-sync-status').textContent = 'Sample data loaded';
+      recalculateReport({ fromForm: false });
+    }
+
+    function readFile(event, onJson) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async e => {
+        let parsed = null;
+        try { parsed = JSON.parse(e.target.result); } catch (_) {}
+        await onJson(parsed, file.name, e.target.result);
+      };
+      reader.readAsText(file);
+    }
+
+    // ---------------------------------------------------------------- binary Garmin .FIT decoder (100% offline)
+    const FIT_EPOCH = 631065600;
+    const FIT_CRC_TBL = [0x0000,0xcc01,0xd801,0x1400,0xf001,0x3c00,0x2800,0xe401,0xa001,0x6c00,0x7800,0xb401,0x5000,0x9c01,0x8801,0x4400];
+    const FIT_SPORTS = { 0:'GENERIC', 1:'RUNNING', 2:'CYCLING', 5:'SWIMMING', 10:'TRAINING', 11:'WALKING', 17:'HIKING' };
+    function crc16Fit(bytes, len) {
+      let crc = 0;
+      for (let i = 0; i < len; i++) {
+        const b = bytes[i];
+        let tmp = FIT_CRC_TBL[crc & 0x0f];
+        crc = ((crc >> 4) & 0x0fff) ^ tmp ^ FIT_CRC_TBL[b & 0x0f];
+        tmp = FIT_CRC_TBL[crc & 0x0f];
+        crc = ((crc >> 4) & 0x0fff) ^ tmp ^ FIT_CRC_TBL[(b >> 4) & 0x0f];
+      }
+      return crc & 0xffff;
+    }
+    function decodeFitFields(dv, u8, offset, def) {
+      const le = def.littleEndian, out = {};
+      for (const f of def.fields) {
+        const base = f.baseType;
+        if (base === 0x07) {
+          let s = '';
+          for (let i = 0; i < f.size && u8[offset + i] !== 0; i++) s += String.fromCharCode(u8[offset + i]);
+          out[f.num] = s;
+        } else if (base === 0x00 || base === 0x02 || base === 0x0a || base === 0x0d) {
+          const v = u8[offset]; if (v !== 0xff) out[f.num] = v;
+        } else if (base === 0x01) {
+          const v = dv.getInt8(offset); if (v !== 0x7f) out[f.num] = v;
+        } else if (base === 0x84 || base === 0x8b) {
+          const cnt = Math.floor(f.size / 2);
+          if (cnt === 1) { const v = dv.getUint16(offset, le); if (v !== 0xffff) out[f.num] = v; }
+          else {
+            const arr = [];
+            for (let k = 0; k < cnt; k++) { const v = dv.getUint16(offset + k * 2, le); if (v !== 0xffff) arr.push(v); }
+            if (arr.length) out[f.num] = arr;
+          }
+        } else if (base === 0x83) {
+          const v = dv.getInt16(offset, le); if (v !== 0x7fff) out[f.num] = v;
+        } else if (base === 0x86 || base === 0x8c) {
+          const v = dv.getUint32(offset, le); if (v !== 0xffffffff) out[f.num] = v;
+        } else if (base === 0x85) {
+          const v = dv.getInt32(offset, le); if (v !== 0x7fffffff) out[f.num] = v;
+        }
+        offset += f.size;
+      }
+      offset += def.devBytes;
+      return { nextOffset: offset, fields: out };
+    }
+    function collectFitMesg(num, f, records, sessions, rrMs) {
+      if (num === 20) {
+        const rec = {};
+        if (f[253] != null) rec.unix_ts = f[253] + FIT_EPOCH;
+        if (f[5] != null) rec.distance_m = Number((f[5] / 100).toFixed(1));
+        const spd = f[73] != null ? f[73] : f[6];
+        if (spd != null) rec.speed_m_s = Number((spd / 1000).toFixed(2));
+        if (f[3] != null) rec.heart_rate_bpm = f[3];
+        if (f[7] != null) rec.power_watts = f[7];
+        records.push(rec);
+      } else if (num === 18) {
+        sessions.push({
+          sport: FIT_SPORTS[f[5] != null ? f[5] : 1] || 'RUNNING',
+          elapsed_s: (f[7] || 0) / 1000,
+          distance_m: (f[9] || 0) / 100,
+          total_calories: f[11],
+          avg_hr: f[16],
+          max_hr: f[17],
+          avg_power: f[20]
+        });
+      } else if (num === 78) {
+        const arr = Array.isArray(f[0]) ? f[0] : (f[0] != null ? [f[0]] : []);
+        for (const v of arr) rrMs.push(v);
+      }
+    }
+    function decodeFitBinary(arrayBuffer) {
+      const u8 = new Uint8Array(arrayBuffer);
+      if (u8.byteLength < 14) throw new Error('File too small to be a Garmin .FIT binary.');
+      const dv = new DataView(arrayBuffer);
+      const headerSize = u8[0];
+      const dataSize = dv.getUint32(4, true);
+      const sig = String.fromCharCode(u8[8], u8[9], u8[10], u8[11]);
+      if (sig !== '.FIT') throw new Error(`Invalid .FIT signature: "${sig}"`);
+      let crcValid = true;
+      if (u8.byteLength >= headerSize + dataSize + 2) {
+        const expected = dv.getUint16(headerSize + dataSize, true);
+        const actual = crc16Fit(u8, headerSize + dataSize);
+        if (expected !== 0 && expected !== actual) crcValid = false;
+      }
+      let offset = headerSize;
+      const end = Math.min(u8.byteLength, headerSize + dataSize);
+      const localDefs = new Map();
+      const records = [], sessions = [], rrMs = [];
+      while (offset < end) {
+        const hdr = u8[offset++];
+        if (hdr & 0x80) {
+          const def = localDefs.get((hdr >> 5) & 0x03);
+          if (!def) break;
+          const res = decodeFitFields(dv, u8, offset, def);
+          offset = res.nextOffset;
+          collectFitMesg(def.globalNum, res.fields, records, sessions, rrMs);
+          continue;
+        }
+        const isDef = (hdr & 0x40) !== 0, hasDev = (hdr & 0x20) !== 0, localNum = hdr & 0x0f;
+        if (isDef) {
+          if (offset + 5 > end) break;
+          const littleEndian = u8[offset + 1] === 0;
+          const globalNum = dv.getUint16(offset + 2, littleEndian);
+          const nFields = u8[offset + 4];
+          offset += 5;
+          const fields = [];
+          for (let i = 0; i < nFields; i++) {
+            fields.push({ num: u8[offset], size: u8[offset + 1], baseType: u8[offset + 2] });
+            offset += 3;
+          }
+          let devBytes = 0;
+          if (hasDev && offset < end) {
+            const nDev = u8[offset++];
+            for (let i = 0; i < nDev; i++) { devBytes += u8[offset + 1]; offset += 3; }
+          }
+          localDefs.set(localNum, { littleEndian, globalNum, fields, devBytes });
+        } else {
+          const def = localDefs.get(localNum);
+          if (!def) break;
+          const res = decodeFitFields(dv, u8, offset, def);
+          offset = res.nextOffset;
+          collectFitMesg(def.globalNum, res.fields, records, sessions, rrMs);
+        }
+      }
+      const cleanRr = rrMs.filter(r => r >= 280 && r <= 2000);
+      let rmssd = null;
+      if (cleanRr.length >= 4) {
+        let sumSq = 0;
+        for (let i = 0; i < cleanRr.length - 1; i++) { const d = cleanRr[i + 1] - cleanRr[i]; sumSq += d * d; }
+        rmssd = Number(Math.sqrt(sumSq / (cleanRr.length - 1)).toFixed(1));
+      }
+      const hrs = records.map(r => r.heart_rate_bpm).filter(Boolean);
+      const spds = records.map(r => r.speed_m_s).filter(v => v != null);
+      const sess = sessions[0] || {};
+      const durMin = Math.max(1, Math.round((sess.elapsed_s || records.length) / 60));
+      const distKm = Number(((sess.distance_m || (records.length ? (records[records.length - 1].distance_m || 0) : 0)) / 1000).toFixed(2));
+      const avgHr = sess.avg_hr || (hrs.length ? Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length) : 155);
+      const maxHr = sess.max_hr || (hrs.length ? Math.max(...hrs) : 182);
+      const cal = sess.total_calories || Math.round(durMin * 12);
+      const avgSpd = spds.length ? spds.reduce((a, b) => a + b, 0) / spds.length : 0;
+      let estVo2 = null;
+      if (avgSpd > 1.8 && avgHr > 105) {
+        const vo2Pace = 3.5 + 0.2 * (avgSpd * 60);
+        const frac = Math.min(0.96, Math.max(0.55, (avgHr - 55) / (192 - 55)));
+        estVo2 = Number(Math.min(78, Math.max(28, vo2Pace / frac)).toFixed(1));
+      }
+      return { crcValid, durMin, distKm, avgHr, maxHr, cal, rmssd, estVo2, sport: sess.sport || 'RUNNING', recordCount: records.length, rrCount: cleanRr.length };
+    }
+
+    function applyDecodedFit(fit, label) {
+      const act = {
+        activity_id: 'FIT_' + Date.now(),
+        name: `${titleCase(fit.sport)} (${label})`,
+        type: fit.sport,
+        duration_min: fit.durMin,
+        distance_km: fit.distKm,
+        avg_hr_bpm: fit.avgHr,
+        max_hr_bpm: fit.maxHr,
+        calories_kcal: fit.cal,
+        aerobic_te: fit.avgHr >= 162 ? 4.2 : 3.4,
+        anaerobic_te: fit.maxHr >= 180 ? 2.4 : 1.5
+      };
+      currentState.garmin.activities = [act, ...(currentState.garmin.activities || []).slice(0, 4)];
+      currentState.garmin.active_kcal = Math.max(currentState.garmin.active_kcal || 0, fit.cal + 180);
+      if (fit.rmssd != null) currentState.garmin.hrv_rmssd_ms = fit.rmssd;
+      if (fit.estVo2 != null) currentState.garmin.vo2_max_ml_kg_min = fit.estVo2;
+      document.getElementById('garmin-sync-status').textContent =
+        `FIT decoded (${fit.recordCount} pts${fit.crcValid ? ', CRC ok' : ''})`;
+      recalculateReport({ fromForm: false });
+    }
+
+    async function loadSampleFitOnPhone() {
+      const st = document.getElementById('garmin-sync-status');
+      st.textContent = 'Decoding .FIT...';
+      for (const url of ['samples/garmin_threshold_run.fit', '/assets/samples/garmin_threshold_run.fit']) {
+        try {
+          const r = await fetch(url);
+          if (r.ok) {
+            const buf = await r.arrayBuffer();
+            applyDecodedFit(decodeFitBinary(buf), 'garmin_threshold_run.fit');
+            return;
+          }
+        } catch (_) {}
+      }
+      syncGarminApi();
+    }
+
+    function handleGarminFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const st = document.getElementById('garmin-sync-status');
+      if (/\.fit$/i.test(file.name)) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            applyDecodedFit(decodeFitBinary(e.target.result), file.name);
+          } catch (err) {
+            st.textContent = `Couldn't decode ${file.name}: ${err.message}`;
+          }
+        };
+        reader.readAsArrayBuffer(file);
+        return;
+      }
+      readFile(event, async (parsed, name) => {
+        if (!parsed) { st.textContent = `Couldn't read ${name}. Upload a Garmin .fit or .json file.`; return; }
+        currentState.garmin = { ...currentState.garmin, ...(parsed.garmin || parsed) };
+        st.textContent = `Imported ${name}`;
+        await recalculateReport({ fromForm: false });
+      });
+    }
+
+    // ---------------------------------------------------------------- clinical blood CSV / JSON parser
+    const BLOOD_ALIASES = [
+      [/^(apob|apolipoprotein\s*b)/i, 'APOB'],
+      [/^(hs[-_\s]?crp|high[-_\s]?sensitivity\s*crp|c[-_\s]?reactive)/i, 'HS_CRP'],
+      [/^(nt[-_\s]?probnp|bnp)/i, 'NT_PROBNP'],
+      [/^(ferritin|serum\s*ferritin)/i, 'FERRITIN'],
+      [/^(hemoglobin|haemoglobin|^hb$)/i, 'HEMOGLOBIN'],
+      [/^(hba1c|glycated)/i, 'HBA1C'],
+      [/^(fasting\s*(plasma\s*)?glucose|^glucose$)/i, 'FASTING_GLUCOSE'],
+      [/^(ck[-_\s]?mm|creatine\s*kinase|^ck$)/i, 'CK_MM'],
+      [/^(alt\b|alanine\s*aminotransferase|gpt)/i, 'ALT'],
+      [/^(egfr|estimated\s*gfr|glomerular)/i, 'EGFR'],
+      [/^(vitamin\s*d|25[-_\s]?oh|25\(oh\)d)/i, 'VITAMIN_D'],
+      [/^(cortisol|morning\s*(serum\s*)?cortisol)/i, 'CORTISOL_AM']
+    ];
+    function parseBloodCsvText(rawText) {
+      const out = {};
+      for (const rawLine of String(rawText || '').split(/\r?\n/)) {
+        const line = rawLine.trim();
+        if (!line || /^#/.test(line) || /^biomarker\b/i.test(line)) continue;
+        const cols = line.split(/[,;\t]/).map(s => s.trim().replace(/^"|"$/g, ''));
+        if (cols.length < 2) continue;
+        const name = cols[0];
+        let val = parseFloat(cols[1]);
+        const unit = (cols[2] || '').toLowerCase();
+        if (!Number.isFinite(val)) continue;
+        let code = null;
+        for (const [rx, c] of BLOOD_ALIASES) {
+          if (rx.test(name)) { code = c; break; }
+        }
+        if (!code && currentState.blood_panel.values[name.toUpperCase()] !== undefined) {
+          code = name.toUpperCase();
+        }
+        if (!code) continue;
+        if (code === 'FASTING_GLUCOSE' && (unit.includes('mmol') || val < 25)) val = Number((val * 18.0182).toFixed(1));
+        if (code === 'VITAMIN_D' && unit.includes('nmol')) val = Number((val / 2.496).toFixed(1));
+        if (code === 'CORTISOL_AM' && unit.includes('nmol')) val = Number((val / 27.59).toFixed(1));
+        if (code === 'HEMOGLOBIN' && val > 40) val = Number((val / 10).toFixed(1));
+        out[code] = val;
+      }
+      return out;
+    }
+
+    async function loadSampleBloodCsvOnPhone() {
+      const st = document.getElementById('blood-sync-status');
+      for (const url of ['samples/blood_panel_sample.csv', '/assets/samples/blood_panel_sample.csv']) {
+        try {
+          const r = await fetch(url);
+          if (r.ok) {
+            const txt = await r.text();
+            const vals = parseBloodCsvText(txt);
+            const n = Object.keys(vals).length;
+            if (n > 0) {
+              currentState.blood_panel.values = { ...currentState.blood_panel.values, ...vals };
+              if (st) st.textContent = `Imported ${n} lab markers (.CSV)`;
+              recalculateReport({ fromForm: false });
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    function handleBloodFileUpload(event) {
+      readFile(event, async (parsed, name, rawText) => {
+        const st = document.getElementById('blood-sync-status');
+        if (parsed) {
+          currentState.blood_panel.values = { ...currentState.blood_panel.values, ...(parsed.values || parsed) };
+          if (st) st.textContent = `Imported ${name}`;
+          await recalculateReport({ fromForm: false });
+          return;
+        }
+        const csvVals = parseBloodCsvText(rawText);
+        const count = Object.keys(csvVals).length;
+        if (count > 0) {
+          currentState.blood_panel.values = { ...currentState.blood_panel.values, ...csvVals };
+          if (st) st.textContent = `Imported ${count} markers from ${name}`;
+          await recalculateReport({ fromForm: false });
+        } else if (st) {
+          st.textContent = `No recognised markers in ${name}`;
+        }
+      });
+    }
+
+    // ---------------------------------------------------------------- resting ECG strip (Inverted T vs Normal T)
+    let phoneTwaveInverted = true;
+    function leadIISampleMv(phase, inverted) {
+      const g = (mu, sig, amp) => amp * Math.exp(-0.5 * Math.pow((phase - mu) / sig, 2));
+      let mv = g(0.14, 0.024, 0.14) - g(0.235, 0.009, 0.12) + g(0.26, 0.012, 1.18) - g(0.288, 0.011, 0.24);
+      if (inverted) {
+        const sigT = phase < 0.50 ? 0.048 : 0.042;
+        mv += -0.05 * Math.exp(-0.5 * Math.pow((phase - 0.36) / 0.04, 2)) - 0.45 * Math.exp(-0.5 * Math.pow((phase - 0.50) / sigT, 2));
+      } else {
+        const sigT = phase < 0.49 ? 0.052 : 0.036;
+        mv += 0.34 * Math.exp(-0.5 * Math.pow((phase - 0.49) / sigT, 2));
+      }
+      return mv;
+    }
+    function drawPhoneEcg() {
+      const svg = document.getElementById('phone-ecg-svg');
+      if (!svg) return;
+      const W = 360, H = 116, yZero = 64, scaleY = 38;
+      let out = '';
+      for (let gx = 0; gx <= W; gx += 30) out += `<line class="grid" x1="${gx}" x2="${gx}" y1="6" y2="${H - 6}"/>`;
+      for (const mvGrid of [1.0, 0.5, -0.5]) {
+        const gy = (yZero - mvGrid * scaleY).toFixed(1);
+        out += `<line class="grid" x1="0" x2="${W}" y1="${gy}" y2="${gy}"/>`;
+      }
+      out += `<line x1="0" x2="${W}" y1="${yZero}" y2="${yZero}" stroke="var(--ink-4)" stroke-width="1" stroke-dasharray="3 3"/>`;
+      out += `<text class="tick" x="4" y="${yZero - 4}">0 mV</text>`;
+
+      const beats = 3, samples = 240;
+      const pts = [];
+      let troughPts = [];
+      let troughsSvg = '';
+      for (let i = 0; i <= samples; i++) {
+        const x = (i / samples) * W;
+        const phase = ((i / samples) * beats) % 1;
+        const mv = leadIISampleMv(phase, phoneTwaveInverted);
+        const y = yZero - mv * scaleY;
+        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        if (phoneTwaveInverted && phase >= 0.35 && phase <= 0.66 && mv < -0.02) {
+          if (!troughPts.length) troughPts.push(`${x.toFixed(1)},${yZero}`);
+          troughPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        } else if (troughPts.length) {
+          const lastX = troughPts[troughPts.length - 1].split(',')[0];
+          troughPts.push(`${lastX},${yZero}`);
+          troughsSvg += `<polygon points="${troughPts.join(' ')}" fill="rgba(180,35,24,0.18)"/>`;
+          troughPts = [];
+        }
+      }
+      if (troughPts.length) {
+        const lastX = troughPts[troughPts.length - 1].split(',')[0];
+        troughPts.push(`${lastX},${yZero}`);
+        troughsSvg += `<polygon points="${troughPts.join(' ')}" fill="rgba(180,35,24,0.18)"/>`;
+      }
+      out += troughsSvg;
+      out += `<polyline fill="none" stroke="${phoneTwaveInverted ? 'var(--bad)' : 'var(--ok)'}" stroke-width="1.8" stroke-linejoin="round" points="${pts.join(' ')}"/>`;
+      out += `<text class="lab" x="${W - 6}" y="16" text-anchor="end" style="fill:${phoneTwaveInverted ? 'var(--bad)' : 'var(--ok)'}">${phoneTwaveInverted ? 'Lead II · TWI (-0.45 mV)' : 'Lead II · Upright T (+0.34 mV)'}</text>`;
+      svg.innerHTML = out;
+      const note = document.getElementById('phone-ecg-note');
+      if (note) {
+        note.textContent = phoneTwaveInverted
+          ? 'Lead-II wearable strip showing symmetric T-wave inversion (-0.45 mV) below the 0 mV baseline.'
+          : 'Lead-II wearable strip showing normal upright ventricular repolarization (+0.34 mV).';
+      }
+      const link = document.getElementById('phone-ecg-atlas-link');
+      if (link) {
+        link.href = atlasLink('SYS:CARDIOVASCULAR', 'UBERON:0000948', phoneTwaveInverted ? 'twave=inverted_ischemic' : 'twave=upright');
+      }
+    }
+    ['inv', 'up'].forEach(mode => {
+      const btn = document.getElementById('ecg-btn-' + mode);
+      if (btn) btn.addEventListener('click', () => {
+        phoneTwaveInverted = (mode === 'inv');
+        document.getElementById('ecg-btn-inv').setAttribute('aria-pressed', String(phoneTwaveInverted));
+        document.getElementById('ecg-btn-up').setAttribute('aria-pressed', String(!phoneTwaveInverted));
+        drawPhoneEcg();
+      });
+    });
+
+    async function refreshLanPhoneUrl() {
+      const el = document.getElementById('lan-phone-url');
+      if (!el) return;
+      if (location.hostname && location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') {
+        el.textContent = location.href;
+        return;
+      }
+      try {
+        const r = await fetch('/api/v2/lan-info');
+        if (r.ok) {
+          const info = await r.json();
+          if (info.primary_mobile_url) el.textContent = info.primary_mobile_url;
+        }
+      } catch (_) {}
+    }
+
+    async function addQuickMeal() {
+      const name = document.getElementById('new-meal-name').value.trim() || 'Meal';
+      const kcal = parseFloat(document.getElementById('new-meal-kcal').value) || 450;
+      const pro = parseFloat(document.getElementById('new-meal-pro').value) || 35;
+      const carb = parseFloat(document.getElementById('new-meal-carb').value) || 55;
+      const fat = Math.max(5, Math.round((kcal - (pro * 4 + carb * 4)) / 9));
+      currentState.diet.meals.push({ meal: name, items: 'Added in the app', kcal, protein_g: pro, carbs_g: carb, fat_g: fat });
+      currentState.diet.calories_kcal += kcal;
+      currentState.diet.protein_g += pro;
+      currentState.diet.carbs_g += carb;
+      currentState.diet.fat_g += fat;
+      document.getElementById('new-meal-name').value = '';
+      await recalculateReport({ fromForm: false });
+    }
+
+    function downloadHealthReportJson() {
+      if (!currentReport) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(currentReport, null, 2)], { type: 'application/json' }));
+      a.download = `superhuman_${currentReport.user_profile.name.replace(/\s+/g, '_').toLowerCase()}.json`;
+      a.click();
+    }
+    function showWithdraw() {
+      document.getElementById('withdraw-msg').textContent = 'In the real app this asks you to confirm, then tells the study team. Nothing happens in the prototype.';
+    }
+
+    // ---------------------------------------------------------------- render
+    function renderAll() {
+      if (!currentReport) return;
+      const p = currentReport.user_profile;
+      const g = currentReport.garmin;
+      const s = currentReport.summary_scores;
+
+      document.getElementById('user-subtitle').textContent = `${p.name}, ${p.age}${p.sex === 'F' ? ' F' : ' M'}, ${p.weight_kg} kg`;
+      document.getElementById('garmin-badge').textContent = g.device_model || '';
+      document.getElementById('garmin-compliance-text').textContent = currentReport.garmin_attribution.compliance_notice;
+
+      document.getElementById('val-overall').innerHTML = `${s.overall_health_score}<small> /100</small>`;
+      document.getElementById('bar-overall').style.width = `${s.overall_health_score}%`;
+      document.getElementById('val-readiness').innerHTML = `${s.autonomic_readiness_score}<small> /100</small>`;
+      document.getElementById('bar-readiness').style.width = `${s.autonomic_readiness_score}%`;
+      document.getElementById('sub-acwr').textContent = s.acwr_load_ratio > 1.3
+        ? `Load is ${s.acwr_load_ratio} times your usual`
+        : `Load is ${s.acwr_load_ratio} times your usual, which is fine`;
+
+      const sevWord = { HIGH: ['bad', 'Look at this'], MODERATE: ['warn', 'Keep an eye on it'], OPTIMAL: ['ok', 'Fine'] };
+      document.getElementById('insights-list').innerHTML = currentReport.cross_modal_insights.map(ins => {
+        const [cls, word] = sevWord[ins.severity] || ['ok', 'Fine'];
+        return `
+          <div class="item ${cls === 'ok' ? '' : cls}">
+            <div class="row"><strong>${esc(ins.title)}</strong><span class="flag ${cls}">${word}</span></div>
+            <p class="text">${esc(ins.explanation)}</p>
+            <div class="meta"><a href="${atlasLink(ins.systems[0], ins.uberon_id)}">Show in the body atlas</a></div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('recommendations-list').innerHTML = currentReport.recommendations.map(rec => `
+        <div class="item">
+          <div class="row"><strong>${esc(rec.title)}</strong><span class="flag ${rec.priority === 'HIGH_PRIORITY' ? 'bad' : (rec.priority === 'OPTIMIZATION' ? 'warn' : 'ok')}">${esc(rec.category)}</span></div>
+          <p class="text">${esc(rec.action)}</p>
+          <div class="meta"><span>Genes involved: <code>${esc(rec.evidence_gene)}</code></span></div>
+        </div>`).join('');
+
+      document.getElementById('organ-scores-list').innerHTML = currentReport.organ_scores.map(o => {
+        const tone = toneFor(o.score);
+        return `
+          <a class="sysrow" href="${atlasLink(o.organ_system_id, o.uberon_id)}">
+            <span class="n">${esc(o.name)}</span>
+            <span class="track"><i style="width:${o.score}%;background:var(--${tone})"></i></span>
+            <span class="v">${o.score}</span>
+          </a>`;
+      }).join('');
+
+      const tile = (l, v, sub) => `<div class="tile"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub || ''}</div></div>`;
+      document.getElementById('garmin-tiles').innerHTML = [
+        tile('Resting HR', g.resting_hr_bpm, `usual ${g.baseline_rhr_bpm}`),
+        tile('HRV, ms', g.hrv_rmssd_ms, `usual ${g.baseline_hrv_ms}`),
+        tile('VO2 max', g.vo2_max_ml_kg_min, 'mL/kg/min'),
+        tile('Sleep', g.sleep_score, `${g.sleep_duration_hours} h, ${g.deep_sleep_hours} h deep`),
+        tile('Body battery', g.body_battery_score, `stress ${g.stress_avg}`),
+        tile('Active kcal', g.active_kcal, `${Number(g.steps_today).toLocaleString()} steps`)
+      ].join('');
+
+      const field = (id, label, v, unit) => `<div class="field"><span class="name">${label}</span><span class="inline"><input type="number" id="${id}" value="${v}" /><span class="unit">${unit}</span></span></div>`;
+      document.getElementById('garmin-edit-rows').innerHTML = [
+        field('g-input-rhr', 'Resting heart rate', g.resting_hr_bpm, 'bpm'),
+        field('g-input-hrv', 'Overnight HRV', g.hrv_rmssd_ms, 'ms'),
+        field('g-input-vo2', 'VO2 max', g.vo2_max_ml_kg_min, 'mL/kg'),
+        field('g-input-sleep', 'Sleep score', g.sleep_score, '/100'),
+        field('g-input-kcal', 'Active energy', g.active_kcal, 'kcal'),
+        field('g-input-load', '7-day training load', g.training_load_acute, '')
+      ].join('');
+
+      document.getElementById('garmin-activities-list').innerHTML = (g.activities || []).map(act => `
+        <div class="item">
+          <div class="row"><strong>${esc(act.name)}</strong><span class="flag">${act.duration_min} min</span></div>
+          <div class="meta"><span>Avg HR <span class="mono">${act.avg_hr_bpm}</span>, max <span class="mono">${act.max_hr_bpm}</span></span><span><span class="mono">${act.calories_kcal}</span> kcal</span><span>Training effect <span class="mono">${act.aerobic_te}</span> aerobic, <span class="mono">${act.anaerobic_te}</span> anaerobic</span></div>
+        </div>`).join('');
+
+      document.getElementById('blood-inputs-list').innerHTML = currentReport.biomarker_evaluations.map(bm => {
+        const cls = bm.status === 'OPTIMAL' ? 'ok' : (String(bm.status).includes('RISK') || bm.status === 'DEFICIENT' ? 'bad' : 'warn');
+        return `
+          <div class="field">
+            <span class="name">${esc(bm.name)} <span class="flag ${cls}">${esc(titleCase(bm.status))}</span><small>Target ${esc(bm.optimal_range)}</small></span>
+            <span class="inline"><input type="number" step="0.1" data-bm-code="${esc(bm.code)}" value="${bm.value}" /><span class="unit">${esc(bm.unit)}</span></span>
+          </div>`;
+      }).join('');
+
+      const np = currentReport.nutrition_plan;
+      const d = currentReport.diet;
+      document.getElementById('tdee-badge').textContent = `${np.tdee_kcal.toLocaleString()} kcal used`;
+      document.getElementById('nutrition-target-tiles').innerHTML = [
+        tile('Energy, kcal', `${d.calories_kcal}`, `target ${np.targets.calories_kcal}, ${np.energy_balance_kcal > 0 ? '+' : ''}${np.energy_balance_kcal}`),
+        tile('Protein, g', `${d.protein_g}`, `target ${np.targets.protein_g}`),
+        tile('Carbs, g', `${d.carbs_g}`, `target ${np.targets.carbs_g}`),
+        tile('Fat, g', `${d.fat_g}`, `fibre ${d.fiber_g} of ${np.targets.fiber_g} g`),
+        tile('Water, L', `${d.water_liters}`, `target ${np.targets.water_liters}`),
+        tile('Sodium, mg', `${d.sodium_mg}`, `target ${np.targets.sodium_mg}`)
+      ].join('');
+
+      const wf = np.workout_fueling_protocol;
+      document.getElementById('workout-fueling-box').innerHTML = `
+        <p class="intro">For ${esc(wf.trigger_activity)}</p>
+        <div class="item"><strong>Before</strong><p class="text">${esc(wf.pre_workout)}</p></div>
+        <div class="item"><strong>During</strong><p class="text">${esc(wf.intra_workout)}</p></div>
+        <div class="item"><strong>After</strong><p class="text">${esc(wf.post_workout)}</p></div>`;
+
+      document.getElementById('biomarker-foods-box').innerHTML = np.biomarker_targeted_foods.map(bf => `
+        <div class="item"><strong>${esc(bf.target)}</strong><p class="text">${esc(bf.foods)}</p></div>`).join('');
+
+      document.getElementById('diet-meals-list').innerHTML = (d.meals || []).map(m => `
+        <div class="item">
+          <div class="row"><strong>${esc(m.meal)}</strong><span class="mono">${m.kcal} kcal</span></div>
+          <div class="meta"><span>${esc(m.items)}</span><span class="mono">P ${m.protein_g} C ${m.carbs_g} F ${m.fat_g}</span></div>
+        </div>`).join('');
+    }
+
+    // ---------------------------------------------------------------- study (example data)
+    const STUDY = {
+      done: 6,
+      hr: { unit: 'bpm', lo: 140, hi: 175, step: 10, fmt: v => String(v), data: [168, 164, 160, 157, 154, 152, 150, 149, 148, 147],
+            note: 'Your heart rate at the end of each session. It falls as your body adapts to the heat.' },
+      core: { unit: '°C', lo: 38.5, hi: 39.5, step: 0.25, fmt: v => v.toFixed(2).replace(/0$/, ''), data: [39.3, 39.2, 39.1, 39.0, 38.92, 38.86, 38.8, 38.76, 38.72, 38.7],
+            note: 'Your core temperature at the end of each session. A cooler finish means you are shedding heat sooner.' },
+      compare: [
+        ['Resting heart rate', '58 bpm', null],
+        ['Plasma volume', '3.1 L', null],
+        ['Sweat rate in the heat', '1.1 L/h', null],
+        ['Core temp after 60 min', '39.3 °C', null],
+        ['VO2 max', '54 mL/kg/min', null]
+      ]
+    };
+    let studyMeasure = 'hr';
+
+    function renderStudy() {
+      document.getElementById('sessions-done').textContent = STUDY.done;
+      document.getElementById('study-progress').innerHTML = Array.from({ length: 10 }, (_, i) =>
+        `<i class="${i < STUDY.done ? 'done' : (i === STUDY.done ? 'next' : '')}"></i>`).join('');
+      document.querySelector('#compare-table tbody').innerHTML = STUDY.compare.map(([m, a, b]) =>
+        `<tr><th scope="row" style="font-weight:400">${m}</th><td>${a}</td><td class="${b ? '' : 'pending'}">${b || 'Pending'}</td></tr>`).join('');
+      drawStudyChart();
+    }
+
+    function drawStudyChart() {
+      const svg = document.getElementById('study-chart');
+      const s = STUDY[studyMeasure];
+      const L = 40, R = 344, T = 14, B = 168;
+      const x = i => L + i * (R - L) / 9;
+      const y = v => B - (v - s.lo) / (s.hi - s.lo) * (B - T);
+      let out = '';
+      for (let v = s.lo; v <= s.hi + 1e-9; v += s.step) {
+        out += `<line class="grid" x1="${L}" x2="${R}" y1="${y(v)}" y2="${y(v)}"/><text class="tick" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${s.fmt(v)}</text>`;
+      }
+      out += `<line class="axis" x1="${L}" x2="${R}" y1="${B}" y2="${B}"/>`;
+      for (let i = 0; i < 10; i++) out += `<text class="tick" x="${x(i)}" y="${B + 14}" text-anchor="middle">${i + 1}</text>`;
+      out += `<text class="tick" x="${(L + R) / 2}" y="${B + 28}" text-anchor="middle">Session</text>`;
+      const pts = s.data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+      out += `<polyline class="plan" points="${pts.slice(STUDY.done - 1).join(' ')}"/>`;
+      out += `<polyline class="line" points="${pts.slice(0, STUDY.done).join(' ')}"/>`;
+      s.data.slice(0, STUDY.done).forEach((v, i) => { out += `<circle class="dot${i === STUDY.done - 1 ? ' last' : ''}" cx="${x(i)}" cy="${y(v)}" r="${i === STUDY.done - 1 ? 4 : 2.5}"/>`; });
+      out += `<text class="lab" x="${x(0) + 6}" y="${y(s.data[0]) - 8}">${s.fmt(s.data[0])} ${s.unit}</text>`;
+      out += `<text class="lab" x="${x(STUDY.done - 1)}" y="${y(s.data[STUDY.done - 1]) - 10}" text-anchor="middle">${s.fmt(s.data[STUDY.done - 1])}</text>`;
+      svg.innerHTML = out;
+      svg.setAttribute('aria-label', `Example chart: ${studyMeasure === 'hr' ? 'heart rate' : 'core temperature'} at the end of each heat session, falling from ${s.fmt(s.data[0])} to ${s.fmt(s.data[STUDY.done - 1])} ${s.unit} over ${STUDY.done} sessions`);
+      document.getElementById('chart-note').textContent = s.note;
+    }
+    ['hr', 'core'].forEach(k => document.getElementById('t-' + k).addEventListener('click', () => {
+      studyMeasure = k;
+      document.getElementById('t-hr').setAttribute('aria-pressed', String(k === 'hr'));
+      document.getElementById('t-core').setAttribute('aria-pressed', String(k === 'core'));
+      drawStudyChart();
+    }));
+
+    initApp();
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+Biomarker,Value,Unit,Reference_Interval
+Apolipoprotein B,74,mg/dL,40-80
+High-Sensitivity CRP,1.9,mg/L,0.0-1.0
+NT-proBNP,42,pg/mL,5-95
+Serum Ferritin,22,ng/mL,50-180
+Hemoglobin,13.2,g/dL,13.6-17.0
+HbA1c,5.0,%,4.6-5.4
+Fasting Glucose,4.6,mmol/L,4.0-5.1
+Fasting Insulin,4.8,uIU/mL,2.5-8.0
+eGFR,109,mL/min/1.73m2,>90
+ALT,23,U/L,8-30
+Creatine Kinase,460,U/L,40-220
+25-OH Vitamin D,25.4,ng/mL,35-65
+Morning Cortisol,19.8,ug/dL,8.0-17.5
