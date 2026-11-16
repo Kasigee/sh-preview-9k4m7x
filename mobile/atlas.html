@@ -3,30 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f3f2ee" />
-  <title>Body atlas · Superhuman</title>
+  <meta name="theme-color" content="#f6f7f5" />
+  <link rel="icon" href="brand/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png" />
+  <link rel="apple-touch-icon" href="brand/apple-touch-icon.png" />
+  <title>Body atlas · Genesis Foundation Labs</title>
   <link rel="stylesheet" href="fonts/fonts.css" />
   <script>
     try { const t = localStorage.getItem('atlas-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
   </script>
   <script src="three.min.js"></script>
   <style>
-/* Body atlas: paper and ink, one warm accent, hairline rules, mono for data. */
+/* Body atlas: Genesis Foundation Labs paper, obsidian & signature teal (#18a999). */
 :root {
   color-scheme: light;
-  --paper: #f3f2ee;
-  --paper-2: #ebe9e3;
-  --paper-3: #e2dfd7;
-  --scene-bg: #f3f2ee;
-  --ink: #1b1d1c;
-  --ink-2: #545752;
-  --ink-3: #85877f;
-  --rule: #d5d2c9;
-  --rule-strong: #b9b5aa;
-  --accent: #d2512d;
+  --paper: #f6f7f5;
+  --paper-2: #edf0ed;
+  --paper-3: #e1e6e2;
+  --scene-bg: #f6f7f5;
+  --ink: #101418;
+  --ink-2: #485158;
+  --ink-3: #768087;
+  --rule: #d5dbd7;
+  --rule-strong: #b4beba;
+  --accent: #0f8e80;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(210, 81, 45, 0.1);
-  --ok: #2f7d5b;
+  --accent-soft: rgba(24, 169, 153, 0.12);
+  --ok: #1b8364;
   --warn: #a8701b;
   --bad: #b83a2e;
   --cool: #2c6680;
@@ -40,19 +43,19 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #121413;
-    --paper-2: #1a1c1b;
-    --paper-3: #242725;
-    --scene-bg: #141615;
-    --ink: #e9e7e1;
-    --ink-2: #aaaba4;
-    --ink-3: #7c7e78;
-    --rule: #2d302e;
-    --rule-strong: #43463f;
-    --accent: #ec6a45;
-    --accent-ink: #1a0b06;
-    --accent-soft: rgba(236, 106, 69, 0.14);
-    --ok: #5cbf8f;
+    --paper: #101418;
+    --paper-2: #171d22;
+    --paper-3: #20282f;
+    --scene-bg: #12171c;
+    --ink: #eef2f1;
+    --ink-2: #a5b0b6;
+    --ink-3: #737f87;
+    --rule: #252e35;
+    --rule-strong: #3a464f;
+    --accent: #18a999;
+    --accent-ink: #061816;
+    --accent-soft: rgba(24, 169, 153, 0.16);
+    --ok: #46c399;
     --warn: #e0a54a;
     --bad: #ef7d6f;
     --cool: #7bb6cf;
@@ -60,19 +63,19 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #121413;
-  --paper-2: #1a1c1b;
-  --paper-3: #242725;
-  --scene-bg: #141615;
-  --ink: #e9e7e1;
-  --ink-2: #aaaba4;
-  --ink-3: #7c7e78;
-  --rule: #2d302e;
-  --rule-strong: #43463f;
-  --accent: #ec6a45;
-  --accent-ink: #1a0b06;
-  --accent-soft: rgba(236, 106, 69, 0.14);
-  --ok: #5cbf8f;
+  --paper: #101418;
+  --paper-2: #171d22;
+  --paper-3: #20282f;
+  --scene-bg: #12171c;
+  --ink: #eef2f1;
+  --ink-2: #a5b0b6;
+  --ink-3: #737f87;
+  --rule: #252e35;
+  --rule-strong: #3a464f;
+  --accent: #18a999;
+  --accent-ink: #061816;
+  --accent-soft: rgba(24, 169, 153, 0.16);
+  --ok: #46c399;
   --warn: #e0a54a;
   --bad: #ef7d6f;
   --cool: #7bb6cf;
@@ -531,7 +534,7 @@ dialog::backdrop { background: rgba(20, 20, 18, 0.32); }
   <div id="sr-live-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
   <header class="topbar">
-    <a class="brand" href="atlas.html"><strong>Superhuman</strong><span>Body atlas</span></a>
+    <a class="brand" href="atlas.html"><img src="brand/app-icon-64.png" width="24" height="24" alt="" style="border-radius:5px;vertical-align:middle;margin-right:8px" /><strong>Genesis</strong><span>Foundation Labs · Body atlas</span></a>
     <nav id="tabs" role="tablist" aria-label="Atlas views">
       <button type="button" class="active" data-tab="3d-explorer" role="tab" aria-selected="true">Body</button>
       <button type="button" data-tab="axes" role="tab" aria-selected="false">Organ links</button>

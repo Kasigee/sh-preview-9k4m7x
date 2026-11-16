@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f3f2ee" />
+  <meta name="theme-color" content="#f6f7f5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="icon" href="brand/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png" />
+  <link rel="apple-touch-icon" href="brand/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <title>Superhuman · Participant app</title>
+  <title>Genesis Foundation Labs · Participant App</title>
   <link rel="stylesheet" href="fonts/fonts.css" />
   <script>
     try { const t = localStorage.getItem('atlas-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
@@ -15,39 +18,47 @@
   <style>
     :root {
       color-scheme: light;
-      --paper: #f3f2ee;
-      --paper-2: #ebe9e3;
-      --paper-3: #e2dfd7;
-      --ink: #1b1d1c;
-      --ink-2: #545752;
-      --ink-3: #85877f;
-      --rule: #d5d2c9;
-      --rule-strong: #b9b5aa;
-      --accent: #d2512d;
+      --paper: #f6f7f5;
+      --paper-2: #edf0ed;
+      --paper-3: #e1e6e2;
+      --ink: #101418;
+      --ink-2: #485158;
+      --ink-3: #768087;
+      --rule: #d5dbd7;
+      --rule-strong: #b4beba;
+      --accent: #0f8e80;
       --accent-ink: #ffffff;
-      --accent-soft: rgba(210, 81, 45, 0.1);
-      --ok: #2f7d5b;
+      --accent-soft: rgba(24, 169, 153, 0.12);
+      --ok: #1b8364;
       --warn: #a8701b;
       --bad: #b83a2e;
       --cool: #2c6680;
       --sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
       --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-      --page: #e7e5df;
+      --page: #e8ece9;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         color-scheme: dark;
-        --paper: #121413; --paper-2: #1a1c1b; --paper-3: #242725; --ink: #e9e7e1; --ink-2: #aaaba4; --ink-3: #7c7e78;
-        --rule: #2d302e; --rule-strong: #43463f; --accent: #ec6a45; --accent-ink: #1a0b06; --accent-soft: rgba(236, 106, 69, 0.14);
-        --ok: #5cbf8f; --warn: #e0a54a; --bad: #ef7d6f; --cool: #7bb6cf; --page: #0b0c0c;
+        --paper: #101418; --paper-2: #171d22; --paper-3: #20282f; --ink: #eef2f1; --ink-2: #a5b0b6; --ink-3: #737f87;
+        --rule: #252e35; --rule-strong: #3a464f; --accent: #18a999; --accent-ink: #061816; --accent-soft: rgba(24, 169, 153, 0.16);
+        --ok: #46c399; --warn: #e0a54a; --bad: #ef7d6f; --cool: #7bb6cf; --page: #0a0d10;
       }
     }
     :root[data-theme="dark"] {
       color-scheme: dark;
-      --paper: #121413; --paper-2: #1a1c1b; --paper-3: #242725; --ink: #e9e7e1; --ink-2: #aaaba4; --ink-3: #7c7e78;
-      --rule: #2d302e; --rule-strong: #43463f; --accent: #ec6a45; --accent-ink: #1a0b06; --accent-soft: rgba(236, 106, 69, 0.14);
-      --ok: #5cbf8f; --warn: #e0a54a; --bad: #ef7d6f; --cool: #7bb6cf; --page: #0b0c0c;
+      --paper: #101418; --paper-2: #171d22; --paper-3: #20282f; --ink: #eef2f1; --ink-2: #a5b0b6; --ink-3: #737f87;
+      --rule: #252e35; --rule-strong: #3a464f; --accent: #18a999; --accent-ink: #061816; --accent-soft: rgba(24, 169, 153, 0.16);
+      --ok: #46c399; --warn: #e0a54a; --bad: #ef7d6f; --cool: #7bb6cf; --page: #0a0d10;
     }
+    .genesis-logo-dark { display: none; }
+    .genesis-logo-light { display: block; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .genesis-logo-light { display: none; }
+      :root:not([data-theme="light"]) .genesis-logo-dark { display: block; }
+    }
+    :root[data-theme="dark"] .genesis-logo-light { display: none; }
+    :root[data-theme="dark"] .genesis-logo-dark { display: block; }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
     body { background: var(--page); color: var(--ink); font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; accent-color: var(--accent); }
@@ -199,8 +210,11 @@
 <body>
   <div class="stage">
     <aside class="notes">
-      <h1>Superhuman</h1>
-      <div class="sub">Participant app, prototype</div>
+      <div style="margin-bottom:10px">
+        <img class="genesis-logo-light" src="brand/logo-full-light.png" alt="Genesis Foundation Labs" style="max-width:250px;height:auto" />
+        <img class="genesis-logo-dark" src="brand/logo-full-dark.png" alt="Genesis Foundation Labs" style="max-width:250px;height:auto" />
+      </div>
+      <div class="sub">Participant app · Genesis Foundation Labs</div>
       <p>What someone taking part in a study would see on their phone: their wearable and blood data, how they're tracking through the heat study, and their before and after results.</p>
       <p>Everything here is made up. Switch between three example people below.</p>
       <label for="profile-preset">Example participant
@@ -224,9 +238,12 @@
 
     <div class="phone" id="phone">
       <header class="app-head">
-        <div>
-          <div class="who" id="user-subtitle">Loading</div>
-          <h2 id="pane-title">Today</h2>
+        <div style="display:flex;align-items:center;gap:10px">
+          <img src="brand/app-icon-64.png" width="32" height="32" alt="Genesis" style="border-radius:7px;box-shadow:0 0 0 1px rgba(255,255,255,0.12);flex-shrink:0" />
+          <div>
+            <div class="who" id="user-subtitle">Loading</div>
+            <h2 id="pane-title">Today</h2>
+          </div>
         </div>
         <div class="device" id="garmin-badge"></div>
       </header>
@@ -969,7 +986,7 @@
       if (!currentReport) return;
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(currentReport, null, 2)], { type: 'application/json' }));
-      a.download = `superhuman_${currentReport.user_profile.name.replace(/\s+/g, '_').toLowerCase()}.json`;
+      a.download = `genesis_${currentReport.user_profile.name.replace(/\s+/g, '_').toLowerCase()}.json`;
       a.click();
     }
     function showWithdraw() {

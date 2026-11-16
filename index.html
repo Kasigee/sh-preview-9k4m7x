@@ -4,26 +4,48 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow, noarchive" />
-  <title>Superhuman · TheHumanProject — Co-Founder Preview</title>
+  <meta name="theme-color" content="#f6f7f5" />
+  <link rel="icon" href="brand/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png" />
+  <link rel="apple-touch-icon" href="brand/apple-touch-icon.png" />
+  <title>Genesis Foundation Labs — Co-Founder Platform Preview</title>
+  <script>
+    try { const t = localStorage.getItem('gfl-hub-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
+  </script>
   <style>
     :root {
-      --bg: #f5f3ee; --paper: #ffffff; --ink: #171716; --ink-2: #4c4b47; --ink-3: #78766f;
-      --rule: #dfdcd3; --accent: #b84326; --ok: #1d7a52;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      color-scheme: light;
+      --bg: #f6f7f5; --paper: #ffffff; --ink: #101418; --ink-2: #485158; --ink-3: #768087;
+      --rule: #d5dbd7; --accent: #0f8e80; --accent-bright: #18a999; --ok: #1b8364;
+      --font: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
       --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #111211; --paper: #191a19; --ink: #efede8; --ink-2: #b8b5ad; --ink-3: #85827a;
-        --rule: #2c2e2c; --accent: #e06344; --ok: #38b27d;
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #101418; --paper: #171d22; --ink: #eef2f1; --ink-2: #a5b0b6; --ink-3: #737f87;
+        --rule: #252e35; --accent: #18a999; --accent-bright: #22c1af; --ok: #46c399;
       }
     }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101418; --paper: #171d22; --ink: #eef2f1; --ink-2: #a5b0b6; --ink-3: #737f87;
+      --rule: #252e35; --accent: #18a999; --accent-bright: #22c1af; --ok: #46c399;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.55; padding: 36px 20px 64px; }
+    body { font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.55; padding: 36px 20px 64px; -webkit-font-smoothing: antialiased; }
     .wrap { max-width: 980px; margin: 0 auto; }
-    .eyebrow { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 600; }
-    h1 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -0.02em; margin-top: 6px; line-height: 1.15; }
-    .lead { color: var(--ink-2); font-size: 16px; max-width: 720px; margin-top: 10px; }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+    .logo-light { display: block; width: min(340px, 78vw); height: auto; }
+    .logo-dark { display: none; width: min(340px, 78vw); height: auto; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .logo-light { display: none; }
+      :root:not([data-theme="light"]) .logo-dark { display: block; }
+    }
+    :root[data-theme="dark"] .logo-light { display: none; }
+    :root[data-theme="dark"] .logo-dark { display: block; }
+    .eyebrow { font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 600; margin-top: 8px; }
+    .lead { color: var(--ink-2); font-size: 15.5px; max-width: 760px; margin-top: 10px; }
     .notice { margin-top: 18px; padding: 11px 14px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(295px, 1fr)); gap: 16px; margin-top: 24px; }
     .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; }
@@ -34,15 +56,29 @@
     .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     a.btn, button.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); font-family: inherit; }
     a.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    :root[data-theme="dark"] a.btn.primary { color: #061816; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) a.btn.primary { color: #061816; }
+    }
     .url-line { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); word-break: break-all; margin-top: 8px; }
-    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--ink-3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--ink-3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; align-items: center; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="eyebrow">Private Co-Founder Preview · Unlisted Link (noindex)</div>
-    <h1>Superhuman &amp; TheHumanProject</h1>
-    <p class="lead">Interactive preview bundle across desktop and phone: the 34-organ NIH HRA 3D Reference Body &amp; Coupled Biophysical ODE Simulator, Personal Health Twin (<code>.FIT</code> + Blood Labs + Inverted T-Wave ECG), Genomics &times; 72h Circadian Rhythm Pilot, and the Participant Phone App.</p>
+    <div class="hero-top">
+      <div>
+        <img class="logo-light" src="brand/logo-full-light.png" alt="Genesis Foundation Labs" />
+        <img class="logo-dark" src="brand/logo-full-dark.png" alt="Genesis Foundation Labs" />
+        <div class="eyebrow">Private Co-Founder Preview · Unlisted Link (noindex)</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="brand/app-icon-64.png" width="38" height="38" alt="Genesis App Icon" style="border-radius:9px;box-shadow:0 0 0 1px rgba(255,255,255,0.14)" />
+        <button type="button" class="btn" onclick="(function(){const r=document.documentElement;const d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=d?'light':'dark';try{localStorage.setItem('gfl-hub-theme',r.dataset.theme);}catch(_){}})()">Light / Dark</button>
+      </div>
+    </div>
+
+    <p class="lead">Interactive platform preview across desktop and mobile for <strong>Genesis Foundation Labs</strong>: the 34-organ NIH HRA 3D Reference Body &amp; Coupled Biophysical ODE Simulator, Personal Health Twin (<code>.FIT</code> + Blood Labs + Inverted T-Wave ECG), Genomics &times; 72h Circadian Rhythm Pilot, and the Participant Phone App.</p>
 
     <div class="notice">
       <span><strong>Shareable Base URL:</strong> <code style="font-family:var(--mono)">https://kasimirgregory.com/sh-preview-9k4m7x/</code></span>
@@ -53,7 +89,7 @@
       <article class="card featured">
         <div>
           <span class="tag">COMPUTER / WEBSITE · v2.0</span>
-          <h2>3D Reference Body, Biophysics ODE, Health Twin &amp; Genomics Pilot</h2>
+          <h2>Genesis 3D Reference Body, Biophysics ODE, Health Twin &amp; Genomics Pilot</h2>
           <p>34 NIH HRA + BodyParts3D 3D organs (1,166 sub-meshes, full skeleton &amp; 177 muscles), 60 fps Coupled Cardiovascular-Pulmonary-Renal-Glycemic ODE with Inverted T-Wave ECG, binary Garmin <code>.FIT</code> + Lab <code>.CSV</code> Health Twin, AlphaGenome 2 Dual-Engine ToS Firewall, and DS/DE/HC Multi-Agent Council.</p>
           <div class="url-line">https://kasimirgregory.com/sh-preview-9k4m7x/v2/</div>
         </div>
@@ -66,8 +102,8 @@
       <article class="card featured">
         <div>
           <span class="tag">IPHONE &amp; ANDROID PWA + DESKTOP BEZEL</span>
-          <h2>Superhuman · Participant Phone App</h2>
-          <p>On a computer, displays the interactive phone bezel alongside presenter study notes. Open this exact URL on an iPhone (Safari &rarr; Share &rarr; Add to Home Screen) or Android (Chrome &rarr; Add to Home Screen) for the full-screen native-feel app with offline <code>.FIT</code> binary decoding, Resting Inverted-T ECG strip, and 3D Atlas deep links.</p>
+          <h2>Genesis · Participant Phone App</h2>
+          <p>On a computer, displays the interactive phone bezel alongside presenter study notes. Open this exact URL on an iPhone (Safari &rarr; Share &rarr; Add to Home Screen) or Android (Chrome &rarr; Add to Home Screen) to install with the Genesis DNA App Icon, offline <code>.FIT</code> binary decoding, Resting Inverted-T ECG strip, and 3D Atlas deep links.</p>
           <div class="url-line">https://kasimirgregory.com/sh-preview-9k4m7x/mobile/</div>
         </div>
         <div class="actions">
@@ -92,7 +128,7 @@
         <div>
           <span class="tag">STANDALONE OFFLINE BUNDLE &amp; v1 ATLAS</span>
           <h2>Capacitor Offline Bundle &amp; v1 Prototype</h2>
-          <p>Compare the self-contained 2.3 MB offline Android/Capacitor bundle (<code>phone/</code>) and the earlier single-file <code>v1</code> Three.js prototype (<code>v1/</code>) to see the architectural progression.</p>
+          <p>Compare the self-contained offline Android/Capacitor bundle (<code>phone/</code>) and the earlier single-file <code>v1</code> Three.js prototype (<code>v1/</code>) to see the architectural progression.</p>
           <div class="url-line">https://kasimirgregory.com/sh-preview-9k4m7x/phone/ &nbsp;·&nbsp; https://kasimirgregory.com/sh-preview-9k4m7x/v1/</div>
         </div>
         <div class="actions">
@@ -103,7 +139,7 @@
     </div>
 
     <footer>
-      <span>Research &amp; wellness decision-support prototype only — non-diagnostic.</span>
+      <span>Genesis Foundation Labs · Research &amp; wellness decision-support prototype (non-diagnostic).</span>
       <span>Temporary preview hosted via kasimirgregory.com</span>
     </footer>
   </div>

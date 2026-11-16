@@ -1,46 +1,46 @@
 /* ============================================================================
-   TheHumanProject v2 — Scientific Atlas & Biophysical Twin Design System
-   Editorial Paper & Ink + Adaptive Obsidian Dark Mode · Tabular Numerals
+   Genesis Foundation Labs — Scientific Atlas & Biophysical Twin Design System
+   Genesis Paper (#f6f7f5), Obsidian (#101418) & Signature Teal (#18a999)
    ============================================================================ */
 
 :root {
   color-scheme: light;
-  --paper: #f3f1ec;
-  --paper-2: #eae7df;
-  --paper-3: #dfdcd2;
-  --ink: #191b1a;
-  --ink-2: #525550;
-  --ink-3: #7f827b;
-  --rule: #d3cfc5;
-  --rule-strong: #b6b1a5;
-  --accent: #cc4b27;
+  --paper: #f6f7f5;
+  --paper-2: #edf0ed;
+  --paper-3: #e1e6e2;
+  --ink: #101418;
+  --ink-2: #485158;
+  --ink-3: #768087;
+  --rule: #d5dbd7;
+  --rule-strong: #b4beba;
+  --accent: #0f8e80;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(204, 75, 39, 0.11);
-  --ok: #267855;
+  --accent-soft: rgba(24, 169, 153, 0.13);
+  --ok: #1b8364;
   --warn: #a66c14;
   --bad: #b8352a;
   --cool: #286480;
   --sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Geist Mono", "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --radius: 5px;
-  --topbar-h: 54px;
+  --topbar-h: 56px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #121413;
-    --paper-2: #191c1a;
-    --paper-3: #232724;
-    --ink: #eceae4;
-    --ink-2: #a9aba4;
-    --ink-3: #797c75;
-    --rule: #2b2f2c;
-    --rule-strong: #414642;
-    --accent: #ec6b46;
-    --accent-ink: #190904;
-    --accent-soft: rgba(236, 107, 70, 0.15);
-    --ok: #58c291;
+    --paper: #101418;
+    --paper-2: #171d22;
+    --paper-3: #20282f;
+    --ink: #eef2f1;
+    --ink-2: #a5b0b6;
+    --ink-3: #737f87;
+    --rule: #252e35;
+    --rule-strong: #3a464f;
+    --accent: #18a999;
+    --accent-ink: #061816;
+    --accent-soft: rgba(24, 169, 153, 0.17);
+    --ok: #46c399;
     --warn: #e3a748;
     --bad: #f0796b;
     --cool: #76b6d1;
@@ -49,18 +49,18 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #121413;
-  --paper-2: #191c1a;
-  --paper-3: #232724;
-  --ink: #eceae4;
-  --ink-2: #a9aba4;
-  --ink-3: #797c75;
-  --rule: #2b2f2c;
-  --rule-strong: #414642;
-  --accent: #ec6b46;
-  --accent-ink: #190904;
-  --accent-soft: rgba(236, 107, 70, 0.15);
-  --ok: #58c291;
+  --paper: #101418;
+  --paper-2: #171d22;
+  --paper-3: #20282f;
+  --ink: #eef2f1;
+  --ink-2: #a5b0b6;
+  --ink-3: #737f87;
+  --rule: #252e35;
+  --rule-strong: #3a464f;
+  --accent: #18a999;
+  --accent-ink: #061816;
+  --accent-soft: rgba(24, 169, 153, 0.17);
+  --ok: #46c399;
   --warn: #e3a748;
   --bad: #f0796b;
   --cool: #76b6d1;
@@ -87,10 +87,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
   top: 0;
   z-index: 40;
 }
-.brand { display: flex; align-items: baseline; gap: 8px; text-decoration: none; white-space: nowrap; }
-.brand-mark { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); display: inline-block; }
-.brand-title { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
-.brand-ver { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+.brand-icon { width: 28px; height: 28px; border-radius: 6px; display: block; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14); }
+.brand-lockup { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1; }
+.brand-wordmark { height: 14px; width: auto; display: block; }
+.brand-wordmark-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-wordmark-light { display: none; }
+  :root:not([data-theme="light"]) .brand-wordmark-dark { display: block; }
+}
+:root[data-theme="dark"] .brand-wordmark-light { display: none; }
+:root[data-theme="dark"] .brand-wordmark-dark { display: block; }
+.brand-sub { font-size: 7.5px; letter-spacing: 0.27em; color: var(--ink-2); font-weight: 600; text-transform: uppercase; padding-left: 1px; }
 
 .nav-tabs { display: flex; gap: 4px; margin-left: 8px; }
 .nav-tab {
