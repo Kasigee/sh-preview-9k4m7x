@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    try {
+      const s = localStorage.getItem('color-scheme');
+      if (s === 'light' || s === 'dark') document.querySelector('meta[name="color-scheme"]').content = s;
+    } catch (_) {}
+  </script>
+  <meta name="theme-color" content="#101418" />
+  <title>Genesis Open Anatomy — Free Interactive 3D Muscle &amp; Movement Library | Genesis Foundation Labs</title>
+  <meta name="description" content="Where a muscle starts, where it attaches, and how it contracts — rotatable real-time 3D skeletal & muscular anatomy, free forever from Genesis Foundation Labs." />
+  <link rel="icon" href="../assets/brand/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32.png" />
+  <link rel="apple-touch-icon" href="../assets/brand/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/anatomy.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "../vendor/three/three.module.js",
+      "three/addons/": "../vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="promo-ribbon">
+    <span class="promo-pill">$0 FREE FOREVER</span>
+    <span>Interactive 3D Muscle &amp; Joint Library — why pay <span class="promo-strike">A$339 AUD</span> for static anatomy videos?</span>
+    <button type="button" class="promo-cta" data-open-waitlist>Get Early Access to Genesis Health Twin &rarr;</button>
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="../" aria-label="Genesis Foundation Labs">
+      <img class="brand-icon" src="../assets/brand/app-icon-64.png" width="30" height="30" alt="" />
+      <span class="brand-lockup">
+        <img class="brand-wm logo-light" src="../assets/brand/logo-wordmark-light.png" alt="Genesis" />
+        <img class="brand-wm logo-dark" src="../assets/brand/logo-wordmark-dark.png" alt="Genesis" />
+        <span class="brand-sub">OPEN ANATOMY LIBRARY</span>
+      </span>
+    </a>
+
+    <nav class="mode-tabs" role="tablist" aria-label="Open Anatomy Workspaces">
+      <button type="button" class="tab-btn" role="tab" aria-selected="true" data-tab="lab">1. 3D Muscle &amp; Movement Lab</button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="foundations">2. Bones, Levers &amp; 6 Joint Types</button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="directory">3. All 419 3D Bones &amp; Muscles</button>
+    </nav>
+
+    <div class="top-actions">
+      <a class="btn" href="../">3D Whole-Body Biophysics</a>
+      <a class="btn" href="../../">Hub</a>
+      <a class="btn" href="../../mobile/" id="nav-phone-link">Phone App</a>
+      <button type="button" class="btn" id="theme-toggle-btn">Dark mode</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <!-- =====================================================================
+         TAB 1: REAL-TIME 3D MUSCLE CONTRACTION & JOINT ARTICULATION LAB
+         ===================================================================== -->
+    <section id="tab-panel-lab">
+      <div class="lab-grid">
+        <!-- Left Movement Selector Rail -->
+        <aside class="panel move-rail" aria-label="Anatomical movements">
+          <div>
+            <div class="eyebrow">Interactive 3D Biomechanics</div>
+            <h1 style="font-size:17px;margin-top:3px">Where muscles start, attach &amp; pull</h1>
+            <p style="font-size:12px;color:var(--ink-2);margin-top:4px">Pick any movement to watch authentic 3D bones rotate around the joint fulcrum while prime movers contract.</p>
+          </div>
+          <div id="movement-rail-list"></div>
+        </aside>
+
+        <!-- Center 3D WebGL Articulation Stage -->
+        <div class="panel stage-card">
+          <div class="viewport-wrap" id="anatomy-viewport">
+            <div class="loading-overlay" id="viewport-loading">
+              <div class="spinner" aria-hidden="true"></div>
+              <span id="viewport-loading-text">Loading BodyParts3D 242 Bones &amp; 177 Muscles...</span>
+            </div>
+
+            <div class="hud-top">
+              <div class="hud-badge">
+                <span class="mono" id="mesh-stats-badge">BodyParts3D · Loading...</span>
+                <div style="font-size:11.3px;color:var(--ink-2);margin-top:2px" id="picked-readout">Drag to orbit · Scroll to zoom · Click any bone or muscle</div>
+              </div>
+              <div class="hud-badge hud-legend">
+                <span><i class="dot" style="background:#d6453a"></i>Agonist</span>
+                <span><i class="dot" style="background:#18a999"></i>Antagonist / Fulcrum</span>
+                <span><i class="dot" style="background:#e69f22"></i>Origin (O)</span>
+                <span><i class="dot" style="background:#e03e36"></i>Insertion (I)</span>
+              </div>
+            </div>
+
+            <div class="hover-tip" id="viewport-hover-tip" hidden></div>
+          </div>
+
+          <div class="controls-bar">
+            <div class="scrubber-row">
+              <button type="button" class="btn btn-accent" id="play-pause-btn" aria-pressed="true" style="min-width:130px">Pause</button>
+              <label for="contraction-slider" class="mono" style="font-size:12px;white-space:nowrap">Contraction <strong id="contraction-pct">0%</strong></label>
+              <input id="contraction-slider" type="range" min="0" max="100" value="0" aria-label="Muscle contraction percentage" />
+              <button type="button" class="btn" id="reset-cam-btn">Reset View</button>
+            </div>
+            <div class="toggle-row">
+              <button type="button" class="pill-toggle" id="tog-antagonists" aria-pressed="true">Antagonists</button>
+              <button type="button" class="pill-toggle" id="tog-vectors" aria-pressed="true">Origin &rarr; Insertion Vectors</button>
+              <button type="button" class="pill-toggle" id="tog-unilateral" aria-pressed="true">Single-Side Focus</button>
+              <button type="button" class="pill-toggle" id="tog-ghost" aria-pressed="false">Ghost Full Musculature</button>
+              <button type="button" class="btn" id="copy-move-link-btn" style="margin-left:auto">Copy Movement Link</button>
+              <button type="button" class="btn btn-muscle" id="export-card-btn">Export Share Card (PNG)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Origin / Insertion / Biomechanics Inspector -->
+        <aside class="inspector-col" aria-label="Muscle attachments and biomechanics">
+          <div class="panel">
+            <div class="eyebrow" id="ins-region">Upper Limb · Sagittal Plane</div>
+            <h2 id="ins-title" style="font-size:20px;margin-top:3px">Elbow Flexion</h2>
+            <p id="ins-sub" style="font-size:12.6px;color:var(--ink-2);margin-top:3px"></p>
+
+            <div class="kpi-strip">
+              <div class="kpi-box"><div class="k">Joint Angle</div><div class="v" id="kpi-angle">0°</div></div>
+              <div class="kpi-box"><div class="k">Est. Torque</div><div class="v" id="kpi-torque">0 N·m</div></div>
+              <div class="kpi-box"><div class="k">Phase</div><div class="v" id="kpi-phase">Rest</div></div>
+            </div>
+
+            <div class="attach-box">
+              <div class="attach-item origin">
+                <small>Origin — Where the muscle starts (proximal anchor)</small>
+                <span id="ins-origin"></span>
+              </div>
+              <div class="attach-item insertion">
+                <small>Insertion — Where it attaches &amp; pulls (moving bone)</small>
+                <span id="ins-insertion"></span>
+              </div>
+              <div class="attach-item">
+                <small>Joint Type &amp; Lever Mechanics</small>
+                <div id="ins-joint" style="font-weight:600"></div>
+                <div id="ins-lever" class="mono" style="font-size:11.3px;color:var(--ink-2);margin-top:2px"></div>
+              </div>
+              <div class="attach-item">
+                <small>Motor Innervation</small>
+                <span id="ins-nerve"></span>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <div class="eyebrow" style="color:var(--muscle)">Prime Movers (Agonists — click to isolate 3D mesh)</div>
+              <div class="chip-list" id="ins-agonists"></div>
+            </div>
+            <div style="margin-top:10px">
+              <div class="eyebrow">Opposing Muscles (Antagonists)</div>
+              <div class="chip-list" id="ins-antagonists"></div>
+            </div>
+
+            <p id="ins-note" style="font-size:12.5px;color:var(--ink-2);margin-top:12px;padding-top:10px;border-top:1px solid var(--rule)"></p>
+            <p style="font-size:12px;margin-top:8px;padding:8px 10px;border-radius:7px;background:var(--paper-2)"><strong>Coaching / Clinical Cue:</strong> <span id="ins-cue"></span></p>
+          </div>
+
+          <div class="funnel-card">
+            <span class="promo-pill" style="align-self:flex-start">BUILT BY GENESIS FOUNDATION LABS</span>
+            <h3 style="font-size:16px">From 3D Anatomy to Your Live Digital Twin</h3>
+            <p>This Open Anatomy Library is <strong>100% free forever</strong>. Ready to map your own Garmin wearables, blood biomarkers, ECG, and circadian rhythms onto your 3D physiology?</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+              <button type="button" class="promo-cta" data-open-waitlist>Join Genesis Beta Waitlist</button>
+              <a class="btn" href="../" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.2)">Open 3D Biophysics &rarr;</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 2: BONES, WHERE MOVEMENT BEGINS — LEVERS, FOOT ARCH & 6 JOINTS
+         ===================================================================== -->
+    <section id="tab-panel-foundations" class="foundations-wrap" hidden>
+      <div class="hero-explainer">
+        <article class="panel">
+          <div class="eyebrow">Foundations · Bones, Where Movement Begins</div>
+          <h2 style="font-size:21px;margin-top:4px">Every movement starts with a bone lever &amp; a joint fulcrum</h2>
+          <p style="font-size:13px;color:var(--ink-2);margin-top:6px">Bones are not just scaffolding—they are rigid levers. Muscles can only <em>pull</em> (never push) across a joint fulcrum. Toggle the 3 human lever classes and drag contraction force below:</p>
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+            <button type="button" class="pill-toggle" data-lever-class="1" aria-pressed="false">Class 1 (Triceps)</button>
+            <button type="button" class="pill-toggle" data-lever-class="2" aria-pressed="false">Class 2 (Calf / Arch)</button>
+            <button type="button" class="pill-toggle" data-lever-class="3" aria-pressed="true">Class 3 (Biceps)</button>
+          </div>
+
+          <div style="background:var(--bg);border:1px solid var(--rule);border-radius:8px;margin-top:12px;padding:8px">
+            <svg id="lever-svg" viewBox="0 0 370 205" width="100%" height="190" role="img" aria-label="Interactive biomechanical lever diagram"></svg>
+          </div>
+
+          <div class="scrubber-row" style="margin-top:10px">
+            <label for="lever-slider" class="mono" style="font-size:12px">Muscle Pull</label>
+            <input id="lever-slider" type="range" min="0" max="100" value="55" />
+          </div>
+          <p id="lever-caption" style="font-size:12.6px;color:var(--ink-2);margin-top:8px"></p>
+        </article>
+
+        <article class="panel">
+          <div class="eyebrow">Structural Geometry · Foot Arch as Shapes</div>
+          <h2 style="font-size:21px;margin-top:4px">The Foot Arch &amp; Windlass Truss</h2>
+          <p style="font-size:13px;color:var(--ink-2);margin-top:6px">Think of the foot as interlocking geometric blocks (Calcaneus, Talus, Navicular, 1st Metatarsal) tensioned from underneath by the plantar fascia. Extending the big toe winds the fascia tighter and locks the arch into a rigid propulsion lever:</p>
+
+          <div style="background:var(--bg);border:1px solid var(--rule);border-radius:8px;margin-top:12px;padding:8px">
+            <svg id="arch-svg" viewBox="0 0 370 190" width="100%" height="190" role="img" aria-label="Interactive foot arch truss and windlass diagram"></svg>
+          </div>
+
+          <div class="scrubber-row" style="margin-top:10px">
+            <label for="arch-slider" class="mono" style="font-size:12px">Big-Toe Extension (Windlass)</label>
+            <input id="arch-slider" type="range" min="0" max="100" value="35" />
+          </div>
+          <div style="margin-top:10px">
+            <button type="button" class="btn btn-accent" onclick="window.switchAnatomyTab('lab'); document.querySelector('[data-move-id=ankle-plantarflexion]').click();">Inspect Real 3D Foot &amp; Achilles Rig &rarr;</button>
+          </div>
+        </article>
+      </div>
+
+      <div>
+        <div class="eyebrow">Synovial Mechanics · All 6 Human Joint Types</div>
+        <h2 style="font-size:22px;margin-top:3px;margin-bottom:12px">How Joint Geometry Dictates Every Possible Motion</h2>
+        <div class="joints-grid" id="joints-gallery"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         TAB 3: ALL 419 REAL BODYPARTS3D BONES & MUSCLES DIRECTORY
+         ===================================================================== -->
+    <section id="tab-panel-directory" hidden>
+      <div class="panel">
+        <div class="eyebrow">Complete Authentic 3D Mesh Catalog (BodyParts3D · CC-BY-SA)</div>
+        <h2 style="font-size:21px;margin-top:4px">Explore Every Individual 3D Bone &amp; Skeletal Muscle</h2>
+        <p id="dir-count" style="font-size:12.6px;color:var(--ink-2);margin-top:4px;margin-bottom:12px">Loading catalog...</p>
+        <div class="dir-controls">
+          <input id="dir-search" class="search-box" type="search" placeholder="Search any muscle or bone (e.g., supraspinatus, patella, calcaneus, psoas, deltoid)..." aria-label="Search bones and muscles" />
+          <button type="button" class="pill-toggle" data-dir-filter="all" aria-pressed="true">All (419)</button>
+          <button type="button" class="pill-toggle" data-dir-filter="muscle" aria-pressed="false">Muscles (177)</button>
+          <button type="button" class="pill-toggle" data-dir-filter="bone" aria-pressed="false">Bones (242)</button>
+        </div>
+        <div class="dir-grid" id="directory-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Native Light-Dismiss Modals (<dialog closedby="any"> + Safari fallback in JS) -->
+  <dialog id="waitlist-dialog" closedby="any" aria-labelledby="waitlist-title">
+    <div class="dialog-head">
+      <h2 id="waitlist-title" style="font-size:19px">Genesis Foundation Labs — Early Access</h2>
+      <form method="dialog"><button type="submit" class="btn">Close</button></form>
+    </div>
+    <p style="font-size:13px;color:var(--ink-2)">The Open 3D Anatomy Library is free forever. Join the waitlist for the Genesis Personal Health Twin (Garmin `.FIT`, clinical blood panels, circadian rhythms &amp; 3D biophysical simulation).</p>
+    <form class="dialog-form" id="waitlist-form">
+      <label class="sr-only" for="waitlist-email">Email address</label>
+      <input id="waitlist-email" type="email" required placeholder="you@domain.com" autocomplete="email" />
+      <label class="sr-only" for="waitlist-role">Primary interest</label>
+      <select id="waitlist-role">
+        <option value="athlete">Athlete / Coach / Physio</option>
+        <option value="clinician">Clinician / Researcher / Student</option>
+        <option value="personal">Personal Longevity &amp; Health Twin</option>
+      </select>
+      <button type="submit" class="btn btn-accent">Request Early Access</button>
+    </form>
+    <p id="waitlist-status" style="font-size:12.5px;color:var(--accent);margin-top:10px;font-weight:600"></p>
+  </dialog>
+
+  <dialog id="share-dialog" closedby="any" aria-labelledby="share-title">
+    <div class="dialog-head">
+      <h2 id="share-title" style="font-size:18px">Branded 3D Anatomy Card Ready</h2>
+      <form method="dialog"><button type="submit" class="btn">Close</button></form>
+    </div>
+    <p style="font-size:12.6px;color:var(--ink-2)">Generated directly from your live 3D camera angle. Download and post to X, LinkedIn, Instagram, or WhatsApp—every card links back to Genesis Foundation Labs.</p>
+    <img id="share-card-preview" class="share-preview-img" alt="Generated Genesis 3D Anatomy share card preview" />
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <a id="share-card-download" class="btn btn-accent" download="genesis-anatomy.png" href="#">Download PNG (1200×675)</a>
+      <form method="dialog"><button type="submit" class="btn">Done</button></form>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/anatomy_app.js"></script>
+</body>
+</html>

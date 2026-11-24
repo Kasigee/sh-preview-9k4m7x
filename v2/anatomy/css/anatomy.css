@@ -1,0 +1,524 @@
+/* ============================================================================
+   Genesis Foundation Labs — Open Anatomy & Movement Library Stylesheet
+   Follows modern-web-guidance: light-dark(), <meta color-scheme> :has() cascade,
+   case-by-case prefers-reduced-motion, and native <dialog closedby="any">.
+   ============================================================================ */
+
+:root {
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
+  --bg-light: #f6f7f5;
+  --bg-dark: #101418;
+  --paper-light: #ffffff;
+  --paper-dark: #161c21;
+  --paper-2-light: #edf1ef;
+  --paper-2-dark: #1d252c;
+  --ink-light: #101418;
+  --ink-dark: #eef2f1;
+  --ink-2-light: #4a545b;
+  --ink-2-dark: #a6b2b8;
+  --ink-3-light: #748087;
+  --ink-3-dark: #74828b;
+  --rule-light: #d7deda;
+  --rule-dark: #27323a;
+  --accent-light: #0f8e80;
+  --accent-dark: #18a999;
+  --accent-ink-light: #ffffff;
+  --accent-ink-dark: #061816;
+  --muscle-light: #c93d32;
+  --muscle-dark: #ec6256;
+
+  --bg: light-dark(var(--bg-light), var(--bg-dark));
+  --paper: light-dark(var(--paper-light), var(--paper-dark));
+  --paper-2: light-dark(var(--paper-2-light), var(--paper-2-dark));
+  --ink: light-dark(var(--ink-light), var(--ink-dark));
+  --ink-2: light-dark(var(--ink-2-light), var(--ink-2-dark));
+  --ink-3: light-dark(var(--ink-3-light), var(--ink-3-dark));
+  --rule: light-dark(var(--rule-light), var(--rule-dark));
+  --accent: light-dark(var(--accent-light), var(--accent-dark));
+  --accent-ink: light-dark(var(--accent-ink-light), var(--accent-ink-dark));
+  --muscle: light-dark(var(--muscle-light), var(--muscle-dark));
+  --amber: #d98c14;
+
+  --sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius: 10px;
+}
+
+/* Fallback for browsers without light-dark() */
+@supports not (color: light-dark(white, black)) {
+  :root {
+    --bg: var(--bg-light); --paper: var(--paper-light); --paper-2: var(--paper-2-light);
+    --ink: var(--ink-light); --ink-2: var(--ink-2-light); --ink-3: var(--ink-3-light);
+    --rule: var(--rule-light); --accent: var(--accent-light); --accent-ink: var(--accent-ink-light);
+    --muscle: var(--muscle-light);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(:has(> head > meta[name="color-scheme"][content="light"])) {
+      --bg: var(--bg-dark); --paper: var(--paper-dark); --paper-2: var(--paper-2-dark);
+      --ink: var(--ink-dark); --ink-2: var(--ink-2-dark); --ink-3: var(--ink-3-dark);
+      --rule: var(--rule-dark); --accent: var(--accent-dark); --accent-ink: var(--accent-ink-dark);
+      --muscle: var(--muscle-dark);
+    }
+  }
+  :root:has(> head > meta[name="color-scheme"][content="dark"]) {
+    --bg: var(--bg-dark); --paper: var(--paper-dark); --paper-2: var(--paper-2-dark);
+    --ink: var(--ink-dark); --ink-2: var(--ink-2-dark); --ink-3: var(--ink-3-dark);
+    --rule: var(--rule-dark); --accent: var(--accent-dark); --accent-ink: var(--accent-ink-dark);
+    --muscle: var(--muscle-dark);
+  }
+}
+
+html { accent-color: var(--accent); }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.52 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { margin: 0; font-weight: 650; letter-spacing: -0.02em; }
+p { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+a { color: inherit; }
+.mono, code { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.9em; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Light/dark media switching coupled to <meta name="color-scheme"> + OS default */
+.logo-dark { display: none; }
+.logo-light { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .logo-light { display: none; }
+  :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .logo-dark { display: block; }
+}
+:root:has(> head > meta[name="color-scheme"][content="dark"]) .logo-light { display: none; }
+:root:has(> head > meta[name="color-scheme"][content="dark"]) .logo-dark { display: block; }
+
+/* ---------- Header & Marketing Ribbon ---------- */
+.promo-ribbon {
+  background: #101418;
+  color: #e6efed;
+  font-size: 12.5px;
+  padding: 8px 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #243038;
+}
+.promo-pill {
+  background: rgba(24, 169, 153, 0.2);
+  color: #46e0ce;
+  border: 1px solid rgba(24, 169, 153, 0.45);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.promo-strike { color: #95a4ad; text-decoration: line-through; }
+.promo-cta {
+  background: #18a999;
+  color: #061816;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-icon { width: 30px; height: 30px; border-radius: 7px; display: block; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14); }
+.brand-lockup { display: inline-flex; flex-direction: column; gap: 2px; line-height: 1; }
+.brand-wm { height: 14px; width: auto; }
+.brand-sub { font-size: 7.5px; letter-spacing: 0.26em; color: var(--ink-2); font-weight: 600; text-transform: uppercase; }
+
+.mode-tabs { display: flex; gap: 4px; margin-left: 8px; flex-wrap: wrap; }
+.tab-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.tab-btn:hover { background: var(--paper-2); color: var(--ink); }
+.tab-btn[aria-selected="true"] {
+  background: var(--paper-2);
+  border-color: var(--rule);
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.top-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink);
+  font-size: 12.8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(0.97); }
+.btn-accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-muscle { background: var(--muscle); color: #ffffff; border-color: var(--muscle); }
+
+/* ---------- Primary 3D Movement Lab Layout ---------- */
+.page-shell { max-width: 1480px; margin: 0 auto; padding: 16px 18px 42px; }
+.lab-grid {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 340px;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 1120px) {
+  .lab-grid { grid-template-columns: 240px minmax(0, 1fr); }
+  .inspector-col { grid-column: 1 / -1; }
+}
+@media (max-width: 780px) {
+  .lab-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Left Movement Picker Rail */
+.move-rail { display: flex; flex-direction: column; gap: 10px; max-height: calc(100dvh - 140px); overflow-y: auto; }
+.region-group-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 6px 0 4px;
+}
+.move-btn {
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.move-btn strong { font-size: 13.2px; }
+.move-btn span { font-size: 11.4px; color: var(--ink-2); }
+.move-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 11%, var(--paper));
+}
+
+/* Center 3D Viewport Stage */
+.stage-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.viewport-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(410px, 60dvh, 620px);
+  background: var(--bg);
+}
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--bg);
+  z-index: 8;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.loading-overlay[hidden] { display: none; }
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid var(--rule); border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; opacity: 0.6; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hud-top {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 4;
+}
+.hud-badge {
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.hud-legend {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.hover-tip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+  background: #101418;
+  color: #eef4f3;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+
+.controls-bar {
+  padding: 12px 14px;
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.scrubber-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.scrubber-row input[type="range"] { flex: 1; min-width: 160px; cursor: pointer; }
+.toggle-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pill-toggle {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+.pill-toggle[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 14%, var(--paper));
+  font-weight: 600;
+}
+
+/* Right Inspector Column */
+.inspector-col { display: flex; flex-direction: column; gap: 12px; }
+.kpi-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.kpi-box {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px;
+}
+.kpi-box .k { font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; font-family: var(--mono); }
+.kpi-box .v { font-size: 15px; font-weight: 700; margin-top: 2px; font-family: var(--mono); }
+
+.attach-box {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.attach-item {
+  border-left: 3px solid var(--accent);
+  padding: 6px 10px;
+  background: var(--bg);
+  border-radius: 0 7px 7px 0;
+  font-size: 12.5px;
+}
+.attach-item.origin { border-left-color: var(--amber); }
+.attach-item.insertion { border-left-color: var(--muscle); }
+.attach-item small { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; }
+
+.chip-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.muscle-chip {
+  font-size: 11.8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  cursor: pointer;
+}
+.muscle-chip.ag { border-color: color-mix(in srgb, var(--muscle) 55%, var(--rule)); }
+.muscle-chip.ant { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+
+.funnel-card {
+  background: linear-gradient(135deg, #101418 0%, #162428 100%);
+  color: #edf4f2;
+  border: 1px solid #26393e;
+  border-radius: var(--radius);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.funnel-card p { font-size: 12.5px; color: #b7c8c6; }
+
+/* ---------- Tab 2: Bones, Levers & 6 Joint Types (AnatoBase Visual Style) ---------- */
+.foundations-wrap { display: flex; flex-direction: column; gap: 18px; }
+.hero-explainer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) { .hero-explainer { grid-template-columns: 1fr; } }
+
+.joints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 14px;
+}
+.joint-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.joint-svg-box {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  height: 145px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ---------- Tab 3: All 419 BodyParts3D Structures Directory ---------- */
+.dir-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.search-box {
+  flex: 1;
+  min-width: 220px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+.dir-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.dir-item {
+  text-align: left;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.dir-item:hover { border-color: var(--accent); }
+.dir-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--paper-2);
+  color: var(--ink-2);
+}
+
+/* ---------- Native <dialog closedby="any"> Modal ---------- */
+dialog {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 22px;
+  max-width: 480px;
+  width: calc(100vw - 32px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+  transition: opacity 0.2s ease-out, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+}
+dialog::backdrop {
+  background: rgba(10, 14, 18, 0.56);
+  backdrop-filter: blur(3px);
+}
+dialog:not([open]) { opacity: 0; }
+@starting-style {
+  dialog[open] { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog { transition: none; }
+}
+.dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dialog-form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.dialog-form input[type="email"], .dialog-form select {
+  padding: 9px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+}
+.share-preview-img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  display: block;
+  margin-top: 10px;
+}
