@@ -256,15 +256,26 @@ function updateLiveKinematicsUI(u) {
   if (!m) return;
   const pct = Math.round(u * 100);
   const angle = Math.round(m.romDeg[0] + (m.romDeg[1] - m.romDeg[0]) * u);
-  // Bell-shaped length-tension / moment-arm torque curve peaking near mid-range
   const torque = Math.round(m.peakTorqueNm * Math.sin(Math.PI * Math.max(0.08, Math.min(0.95, 0.15 + u * 0.78))));
+  const tel = (scene && scene.lastTelemetry) || { agonistStrainPct: 0, agonistBulgePct: 0, antagonistStrainPct: 0 };
 
   const slider = document.getElementById('contraction-slider');
   if (document.activeElement !== slider) slider.value = String(pct);
   document.getElementById('contraction-pct').textContent = `${pct}%`;
   document.getElementById('kpi-angle').textContent = `${angle}°`;
   document.getElementById('kpi-torque').textContent = `${torque} N·m`;
-  document.getElementById('kpi-phase').textContent = pct < 15 ? 'Rest' : (pct > 85 ? 'Peak' : 'Active');
+  const bulgeEl = document.getElementById('kpi-bulge');
+  if (bulgeEl) bulgeEl.textContent = `+${tel.agonistBulgePct}% Ø`;
+  const agEl = document.getElementById('kpi-ag-strain');
+  if (agEl) {
+    const dL = -tel.agonistStrainPct;
+    agEl.textContent = `${dL > 0 ? '+' : ''}${dL}%`;
+  }
+  const antEl = document.getElementById('kpi-ant-strain');
+  if (antEl) {
+    const dLAnt = -tel.antagonistStrainPct;
+    antEl.textContent = `${dLAnt > 0 ? '+' : ''}${dLAnt}%`;
+  }
 }
 
 function updatePlayBtn() {

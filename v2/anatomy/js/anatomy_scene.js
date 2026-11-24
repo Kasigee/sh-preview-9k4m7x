@@ -1,15 +1,49 @@
 // ============================================================================
-// Genesis Foundation Labs — Real-Time 3D Musculoskeletal Articulation Engine
+// Genesis Foundation Labs — Real-Time 3D Musculoskeletal Skinning & Bulge Engine
 // ============================================================================
-// Loads authentic BodyParts3D (BP3D) 242-bone skeleton + 177-muscle .glb models,
-// rigs live anatomical joint hinges, renders Origin (O) -> Insertion (I) pull
-// vectors with moving insertion anchors, and supports branded PNG card export.
+// Loads authentic BodyParts3D (BP3D) 242-bone skeleton + 177-muscle .glb models
+// and performs real-time 60 fps vertex-level anatomical muscle deformation:
+//   - Two-Anchor Quadratic Bezier + Pulley-Wrapped Skinning (Origin locked,
+//     Insertion rigidly tracks the rotating distal bone!)
+//   - Constant-Volume Poisson Belly Bulge & Superficial Lift on Agonists,
+//     plus Visible Elongation & Narrowing on Antagonists
+//   - Rigid Distal-Limb Rider Skinning for zero floating ghost muscles
+//   - Live PBR normal recomputation & Dynamic Activation Color Modulation
 // ============================================================================
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+// Pure reusable scratch vectors/quaternions (zero GC churn per frame!)
+const _vA = new THREE.Vector3();
+const _vB = new THREE.Vector3();
+const _vC = new THREE.Vector3();
+const _vOrig = new THREE.Vector3();
+const _vIns0 = new THREE.Vector3();
+const _vInsLive = new THREE.Vector3();
+const _vD0 = new THREE.Vector3();
+const _vT0 = new THREE.Vector3();
+const _vMid0 = new THREE.Vector3();
+const _vMidLive = new THREE.Vector3();
+const _vLift = new THREE.Vector3();
+const _vPivot = new THREE.Vector3();
+const _vAxis = new THREE.Vector3();
+const _vPulley = new THREE.Vector3();
+const _vR0 = new THREE.Vector3();
+const _vCenter = new THREE.Vector3();
+const _vTang = new THREE.Vector3();
+const _qRot = new THREE.Quaternion();
+const _qStart = new THREE.Quaternion();
+const _qHalf = new THREE.Quaternion();
+const _qFrame = new THREE.Quaternion();
+const _vInsStart = new THREE.Vector3();
+const _cRelaxed = new THREE.Color(0xb03a32);
+const _cContracted = new THREE.Color(0xf04c38);
+const _cTendon = new THREE.Color(0xe7dfc8);
+const _cAntagonist = new THREE.Color(0x18a999);
+const _cTemp = new THREE.Color();
 
 export class AnatomyScene {
   constructor(container, callbacks = {}) {
@@ -21,16 +55,16 @@ export class AnatomyScene {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(35, 1, 0.01, 20);
-    this.camera.position.set(-0.88, 0.36, 0.42);
+    this.camera.position.set(-0.84, 0.37, 0.40);
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: 'high-performance',
-      preserveDrawingBuffer: true, // Enables instant 1-click branded PNG card export
+      preserveDrawingBuffer: true,
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.06;
     this.renderer.localClippingEnabled = true;
     this.container.appendChild(this.renderer.domElement);
 
@@ -38,10 +72,10 @@ export class AnatomyScene {
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
 
-    const hemi = new THREE.HemisphereLight(0xfffdf9, 0x30363c, 0.92);
-    const key = new THREE.DirectionalLight(0xfffcf5, 1.45);
+    const hemi = new THREE.HemisphereLight(0xfffdf9, 0x30363c, 0.94);
+    const key = new THREE.DirectionalLight(0xfffcf5, 1.5);
     key.position.set(1.6, 2.3, 2.5);
-    const rim = new THREE.DirectionalLight(0xcbe8e4, 0.72);
+    const rim = new THREE.DirectionalLight(0xcbe8e4, 0.78);
     rim.position.set(-2.0, 0.9, -1.8);
     this.scene.add(hemi, key, rim);
 
@@ -60,7 +94,6 @@ export class AnatomyScene {
     this.overlayGroup = new THREE.Group();
     this.root.add(this.skeletonGroup, this.musclesGroup, this.pivotGroup, this.overlayGroup);
 
-    // Subtle floor reference disc at soles (Y = -0.915 m)
     this.floorDisc = new THREE.Mesh(
       new THREE.RingGeometry(0.24, 0.246, 64),
       new THREE.MeshBasicMaterial({ color: 0x8b959a, side: THREE.DoubleSide, transparent: true, opacity: 0.3 })
@@ -70,33 +103,33 @@ export class AnatomyScene {
     this.scene.add(this.floorDisc);
 
     // Registries
-    this.boneNodes = new Map();      // name -> { obj, origParent, origPos, origQuat, origScale, meshes }
-    this.muscleNodes = new Map();    // name -> { obj, meshes, center }
+    this.boneNodes = new Map();
+    this.muscleNodes = new Map();
     this.pickables = [];
     this.allBoneNames = [];
     this.allMuscleNames = [];
+    this._deformedMuscles = new Set();
 
-    // Clipping plane that keeps anatomical right side (x <= +0.015) for clean unilateral teaching
-    this.rightSidePlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0.018);
+    // Clipping plane keeping anatomical right side (x <= +0.015) for clean unilateral teaching
+    this.rightSidePlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0.016);
 
     // Active movement & view options
     this.activeMove = null;
-    this.contraction = 0.0; // 0..1
+    this._activeMovingBones = new Set();
+    this._activeRiderMuscles = new Set();
+    this.contraction = 0.0;
+    this.lastTelemetry = { agonistStrainPct: 0, agonistBulgePct: 0, antagonistStrainPct: 0 };
     this.options = {
       showAntagonists: true,
       showAllMusclesGhost: false,
       showVectors: true,
       unilateralFocus: true,
-      isolatedHighlight: null, // Optional single bone/muscle highlight from directory
+      isolatedHighlight: null,
     };
 
-    // Dynamic overlay primitives (Origin pin, Insertion pin, Joint ring, Pull line, Force beads)
     this._buildOverlayPrimitives();
-
-    // Camera animation tween
     this._camTween = null;
 
-    // Pointer hover/pick
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
     this._downXY = { x: 0, y: 0 };
@@ -112,7 +145,7 @@ export class AnatomyScene {
   }
 
   _buildOverlayPrimitives() {
-    const pinGeo = new THREE.SphereGeometry(0.012, 20, 20);
+    const pinGeo = new THREE.SphereGeometry(0.0115, 20, 20);
     this.originPin = new THREE.Mesh(
       pinGeo,
       new THREE.MeshStandardMaterial({ color: 0xe69f22, emissive: 0xb87409, emissiveIntensity: 0.65, roughness: 0.25 })
@@ -126,9 +159,8 @@ export class AnatomyScene {
       new THREE.MeshStandardMaterial({ color: 0x18a999, emissive: 0x0c7368, emissiveIntensity: 0.6, roughness: 0.3 })
     );
 
-    // Fulcrum ring at joint center
     this.fulcrumRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.044, 0.0032, 12, 48),
+      new THREE.TorusGeometry(0.042, 0.003, 12, 48),
       new THREE.MeshStandardMaterial({
         color: 0x18a999,
         emissive: 0x118578,
@@ -139,11 +171,10 @@ export class AnatomyScene {
       })
     );
     this.fulcrumDot = new THREE.Mesh(
-      new THREE.SphereGeometry(0.0085, 16, 16),
+      new THREE.SphereGeometry(0.008, 16, 16),
       new THREE.MeshStandardMaterial({ color: 0x18a999, emissive: 0x18a999, emissiveIntensity: 0.8 })
     );
 
-    // Dynamic tendon/force line (updated each frame as insertion moves)
     this.pullLineGeo = new THREE.BufferGeometry();
     this.pullLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3));
     this.pullLine = new THREE.Line(
@@ -151,9 +182,8 @@ export class AnatomyScene {
       new THREE.LineBasicMaterial({ color: 0xff5a4e, transparent: true, opacity: 0.92 })
     );
 
-    // Animated force beads sliding from Insertion -> Origin along line of pull
     this.forceBeads = [];
-    const beadGeo = new THREE.SphereGeometry(0.0062, 12, 12);
+    const beadGeo = new THREE.SphereGeometry(0.006, 12, 12);
     const beadMat = new THREE.MeshBasicMaterial({ color: 0xffe066 });
     for (let i = 0; i < 6; i++) {
       const m = new THREE.Mesh(beadGeo, beadMat);
@@ -162,7 +192,6 @@ export class AnatomyScene {
     }
 
     this.overlayGroup.add(this.originPin, this.pulleyPin, this.fulcrumRing, this.fulcrumDot, this.pullLine);
-    // Insertion pin sits inside pivotGroup so it rotates directly with the distal moving bone!
     this.pivotGroup.add(this.insertionPin);
     this.overlayGroup.visible = false;
     this.insertionPin.visible = false;
@@ -233,7 +262,6 @@ export class AnatomyScene {
       obj.userData = { kind: 'bone', name: nm };
       this.pickables.push(obj);
 
-      // Attach to direct mesh node (in BP3D GLB every bone is a direct child node)
       const targetNode = obj.parent && obj.parent !== sceneObj && obj.parent.name === nm ? obj.parent : obj;
       if (!byName.has(nm)) {
         byName.set(nm, {
@@ -244,9 +272,17 @@ export class AnatomyScene {
           origQuat: targetNode.quaternion.clone(),
           origScale: targetNode.scale.clone(),
           meshes: [],
+          minY: Infinity,
+          maxY: -Infinity,
         });
       }
-      byName.get(nm).meshes.push(obj);
+      const rec = byName.get(nm);
+      rec.meshes.push(obj);
+      obj.geometry.computeBoundingBox();
+      if (obj.geometry.boundingBox) {
+        rec.minY = Math.min(rec.minY, obj.geometry.boundingBox.min.y);
+        rec.maxY = Math.max(rec.maxY, obj.geometry.boundingBox.max.y);
+      }
     });
     this.boneNodes = byName;
     this.allBoneNames = [...byName.keys()].sort();
@@ -257,22 +293,68 @@ export class AnatomyScene {
     sceneObj.traverse((obj) => {
       if (!obj.isMesh) return;
       const nm = obj.name || (obj.parent && obj.parent.name) || 'muscle';
+
+      // De-interleave POSITION & NORMAL into clean dedicated Float32Arrays
+      // so vertex-level skinning never mutates shared GLB interleaved buffers!
+      const geom = obj.geometry.clone();
+      const srcPos = geom.attributes.position;
+      const count = srcPos.count;
+      const posArr = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        posArr[i * 3] = srcPos.getX(i);
+        posArr[i * 3 + 1] = srcPos.getY(i);
+        posArr[i * 3 + 2] = srcPos.getZ(i);
+      }
+      const dynPos = new THREE.BufferAttribute(posArr, 3);
+      dynPos.setUsage(THREE.DynamicDrawUsage);
+      geom.setAttribute('position', dynPos);
+
+      if (geom.attributes.normal) {
+        const srcNorm = geom.attributes.normal;
+        const normArr = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+          normArr[i * 3] = srcNorm.getX(i);
+          normArr[i * 3 + 1] = srcNorm.getY(i);
+          normArr[i * 3 + 2] = srcNorm.getZ(i);
+        }
+        const dynNorm = new THREE.BufferAttribute(normArr, 3);
+        dynNorm.setUsage(THREE.DynamicDrawUsage);
+        geom.setAttribute('normal', dynNorm);
+      } else {
+        geom.computeVertexNormals();
+      }
+
+      obj.geometry = geom;
+      obj.frustumCulled = false; // Prevents culling when deformed vertices extend beyond initial bounding sphere
       obj.material = new THREE.MeshPhysicalMaterial({
         color: 0xb6453c,
-        roughness: 0.44,
+        roughness: 0.42,
         metalness: 0.02,
-        clearcoat: 0.24,
+        clearcoat: 0.28,
         transparent: true,
         opacity: 0.94,
         side: THREE.DoubleSide,
       });
-      obj.userData = { kind: 'muscle', name: nm };
+      obj.userData = {
+        kind: 'muscle',
+        name: nm,
+        origPos: new Float32Array(posArr),
+        origNorm: new Float32Array(geom.attributes.normal.array),
+      };
       this.pickables.push(obj);
+
       if (!byName.has(nm)) {
-        byName.set(nm, { name: nm, obj, meshes: [], center: new THREE.Vector3() });
+        byName.set(nm, { name: nm, obj, meshes: [], center: new THREE.Vector3(), minY: Infinity, maxY: -Infinity });
       }
-      byName.get(nm).meshes.push(obj);
+      const rec = byName.get(nm);
+      rec.meshes.push(obj);
+      geom.computeBoundingBox();
+      if (geom.boundingBox) {
+        rec.minY = Math.min(rec.minY, geom.boundingBox.min.y);
+        rec.maxY = Math.max(rec.maxY, geom.boundingBox.max.y);
+      }
     });
+
     for (const entry of byName.values()) {
       const box = new THREE.Box3();
       for (const m of entry.meshes) box.expandByObject(m);
@@ -282,7 +364,8 @@ export class AnatomyScene {
     this.allMuscleNames = [...byName.keys()].sort();
   }
 
-  _restoreAllBonesToRest() {
+  _restoreAllRestGeometry() {
+    // 1. Restore articulated bones
     this.pivotGroup.quaternion.identity();
     this.pivotGroup.position.set(0, 0, 0);
     for (const rec of this.boneNodes.values()) {
@@ -293,27 +376,63 @@ export class AnatomyScene {
       rec.obj.quaternion.copy(rec.origQuat);
       rec.obj.scale.copy(rec.origScale);
     }
+
+    // 2. Restore exact rest vertices & normals for any previously deformed muscle mesh
+    for (const mName of this._deformedMuscles) {
+      const rec = this.muscleNodes.get(mName);
+      if (!rec) continue;
+      for (const mesh of rec.meshes) {
+        const posAttr = mesh.geometry.attributes.position;
+        const normAttr = mesh.geometry.attributes.normal;
+        posAttr.array.set(mesh.userData.origPos);
+        normAttr.array.set(mesh.userData.origNorm);
+        posAttr.needsUpdate = true;
+        normAttr.needsUpdate = true;
+      }
+    }
+    this._deformedMuscles.clear();
   }
 
   setMovement(move, flyCamera = true) {
-    this._restoreAllBonesToRest();
+    this._restoreAllRestGeometry();
     this.activeMove = move;
     this.options.isolatedHighlight = null;
+    this._activeMovingBones.clear();
+    this._activeRiderMuscles.clear();
 
     if (!move) return;
 
-    // Position pivot group at exact anatomical joint center & attach moving distal bones
     const pivotVec = new THREE.Vector3(...move.pivot);
     this.pivotGroup.position.copy(pivotVec);
     this.pivotGroup.quaternion.identity();
 
+    // Collect moving distal bones (explicit list + optional Y-threshold for coherent spinal flexion!)
     const movingSet = new Set(move.movingBones || []);
+    if (typeof move.movingBonesAboveY === 'number') {
+      for (const [bName, rec] of this.boneNodes.entries()) {
+        if (rec.minY >= move.movingBonesAboveY) movingSet.add(bName);
+      }
+    }
+    this._activeMovingBones = movingSet;
+
     for (const bName of movingSet) {
       const rec = this.boneNodes.get(bName);
       if (!rec) continue;
       this.pivotGroup.add(rec.obj);
       rec.obj.position.copy(rec.origPos).sub(pivotVec);
     }
+
+    // Collect distal rider muscles (muscles riding wholly on the moving limb!)
+    const rigMap = move.muscleRigs || {};
+    const riderSet = new Set(move.riderMuscles || []);
+    if (typeof move.riderMusclesAboveY === 'number') {
+      for (const [mName, rec] of this.muscleNodes.entries()) {
+        if (!rigMap[mName] && rec.minY >= move.riderMusclesAboveY) riderSet.add(mName);
+      }
+    }
+    // Never treat an explicitly rigged bridging muscle as a pure rigid rider
+    for (const k of Object.keys(rigMap)) riderSet.delete(k);
+    this._activeRiderMuscles = riderSet;
 
     // Configure overlay pins & joint fulcrum ring
     this.originPin.position.set(...move.originPos);
@@ -344,11 +463,12 @@ export class AnatomyScene {
   setOptions(partial) {
     Object.assign(this.options, partial);
     this.applyVisualStyling();
+    this.setContraction(this.contraction);
     this._updateVectorOverlay(performance.now() * 0.001);
   }
 
   focusSingleStructure(kind, name) {
-    this._restoreAllBonesToRest();
+    this._restoreAllRestGeometry();
     this.options.isolatedHighlight = { kind, name };
     this.overlayGroup.visible = false;
     this.insertionPin.visible = false;
@@ -393,7 +513,6 @@ export class AnatomyScene {
           m.material.emissiveIntensity = isHit ? 0.42 : 0;
           m.material.opacity = isHit ? 0.96 : 0.14;
           m.material.clippingPlanes = [];
-          m.scale.set(1, 1, 1);
         }
       }
       return;
@@ -403,10 +522,9 @@ export class AnatomyScene {
     const agSet = new Set(move.agonists || []);
     const antSet = new Set(move.antagonists || []);
     const anchorSet = new Set(move.anchorBones || []);
-    const movingSet = new Set(move.movingBones || []);
+    const movingSet = this._activeMovingBones;
     const clipArr = (this.options.unilateralFocus && move.side === 'right') ? [this.rightSidePlane] : [];
 
-    // Bones: warm ivory for anchor & moving bones, subtle muted ivory for rest of skeleton
     for (const [bName, rec] of this.boneNodes.entries()) {
       const isMoving = movingSet.has(bName);
       const isAnchor = anchorSet.has(bName);
@@ -415,7 +533,7 @@ export class AnatomyScene {
         if (isMoving) {
           m.material.color.setHex(0xf3ede0);
           m.material.emissive.setHex(0x164a44);
-          m.material.emissiveIntensity = 0.12;
+          m.material.emissiveIntensity = 0.11;
           m.material.transparent = false;
           m.material.opacity = 1.0;
         } else if (isAnchor) {
@@ -434,33 +552,31 @@ export class AnatomyScene {
       }
     }
 
-    // Muscles: Agonist (vivid coral-crimson), Antagonist (Genesis teal), others hidden or ghosted
     for (const [mName, rec] of this.muscleNodes.entries()) {
       const isAg = agSet.has(mName);
       const isAnt = antSet.has(mName);
       for (const m of rec.meshes) {
-        m.scale.set(1, 1, 1);
         if (isAg) {
           m.visible = true;
-          m.material.color.setHex(mName.includes('tendon') ? 0xe7dfc8 : 0xd6453a);
-          m.material.emissive.setHex(mName.includes('tendon') ? 0x6b6043 : 0x7a1a14);
-          m.material.emissiveIntensity = 0.22;
-          m.material.opacity = 0.94;
+          m.material.color.copy(mName.includes('tendon') ? _cTendon : _cRelaxed);
+          m.material.emissive.setHex(mName.includes('tendon') ? 0x6b6043 : 0x7c1a13);
+          m.material.emissiveIntensity = 0.18;
+          m.material.opacity = 0.96;
           m.material.clippingPlanes = clipArr;
         } else if (isAnt && this.options.showAntagonists) {
           m.visible = true;
-          m.material.color.setHex(0x18a999);
+          m.material.color.copy(_cAntagonist);
           m.material.emissive.setHex(0x0a5a52);
           m.material.emissiveIntensity = 0.2;
-          m.material.opacity = 0.42;
+          m.material.opacity = 0.48;
           m.material.clippingPlanes = clipArr;
         } else if (this.options.showAllMusclesGhost) {
           m.visible = true;
           m.material.color.setHex(0xa86b66);
           m.material.emissive.setHex(0x000000);
           m.material.emissiveIntensity = 0;
-          m.material.opacity = 0.11;
-          m.material.clippingPlanes = [];
+          m.material.opacity = 0.13;
+          m.material.clippingPlanes = clipArr;
         } else {
           m.visible = false;
         }
@@ -471,41 +587,282 @@ export class AnatomyScene {
     this.insertionPin.visible = this.options.showVectors;
   }
 
+  // -------------------------------------------------------------------------
+  // True Real-Time Vertex-Level Anatomical Muscle Deformation
+  // -------------------------------------------------------------------------
   setContraction(u) {
     this.contraction = Math.max(0, Math.min(1, u));
     const move = this.activeMove;
-    if (!move || this.options.isolatedHighlight) return;
+    if (!move || this.options.isolatedHighlight) return this.lastTelemetry;
 
-    // 1. Articulate moving distal bones around joint fulcrum
+    // 1. Articulate moving distal bones rigidly around exact anatomical joint fulcrum
     const deg = move.angleStartDeg + (move.angleEndDeg - move.angleStartDeg) * this.contraction;
     const rad = THREE.MathUtils.degToRad(deg);
-    const ax = new THREE.Vector3(...move.axis).normalize();
-    this.pivotGroup.setRotationFromAxisAngle(ax, rad);
+    const startRad = THREE.MathUtils.degToRad(move.angleStartDeg);
+    _vPivot.set(...move.pivot);
+    _vAxis.set(...move.axis).normalize();
+    _qRot.setFromAxisAngle(_vAxis, rad);
+    _qStart.setFromAxisAngle(_vAxis, startRad);
+    _qHalf.setFromAxisAngle(_vAxis, rad * 0.5);
+    this.pivotGroup.quaternion.copy(_qRot);
 
-    // 2. Pulse agonist emissive recruitment & subtle radial belly thickening
     const agSet = new Set(move.agonists || []);
     const antSet = new Set(move.antagonists || []);
-    for (const mName of agSet) {
+    const rigMap = move.muscleRigs || {};
+    const onlyRight = move.side === 'right';
+
+    let agStrainSum = 0, agStrainN = 0;
+    let agBulgeMax = 0;
+    let antStrainSum = 0, antStrainN = 0;
+
+    // 2. Deform every rigged Agonist & Antagonist muscle at vertex level!
+    for (const [mName, rig] of Object.entries(rigMap)) {
       const rec = this.muscleNodes.get(mName);
       if (!rec) continue;
-      for (const m of rec.meshes) {
-        if (!mName.includes('tendon')) {
-          m.material.emissiveIntensity = 0.16 + 0.52 * this.contraction;
-          // Subtle lateral contractile bulge
-          const bulge = 1 + 0.032 * this.contraction;
-          m.scale.set(bulge, 1 - 0.012 * this.contraction, bulge);
+      const isAg = agSet.has(mName);
+      const isAnt = antSet.has(mName);
+      if (!isAg && !(isAnt && this.options.showAntagonists)) continue;
+
+      const uAct = isAg ? this.contraction : -0.22 * this.contraction;
+      let stats = { strain: 0, bulgePeak: 0 };
+
+      if (rig.mode === 'stabilizer') {
+        stats = this._deformStabilizerMuscle(rec, rig, uAct, onlyRight);
+      } else {
+        stats = this._deformBridgingMuscle(rec, rig, _vPivot, _qRot, _qHalf, uAct, onlyRight);
+      }
+      this._deformedMuscles.add(mName);
+
+      if (isAg) {
+        agStrainSum += stats.strain;
+        agStrainN++;
+        agBulgeMax = Math.max(agBulgeMax, stats.bulgePeak);
+      } else if (isAnt) {
+        antStrainSum += stats.strain;
+        antStrainN++;
+      }
+
+      // Dynamic activation color & specular sheen shift with recruitment!
+      for (const mesh of rec.meshes) {
+        if (isAg && !mName.includes('tendon')) {
+          _cTemp.copy(_cRelaxed).lerp(_cContracted, this.contraction);
+          mesh.material.color.copy(_cTemp);
+          mesh.material.emissiveIntensity = 0.14 + 0.44 * this.contraction;
+        } else if (isAnt) {
+          mesh.material.opacity = 0.54 - 0.14 * this.contraction;
+          mesh.material.emissiveIntensity = 0.18 + 0.16 * this.contraction;
         }
       }
     }
-    for (const mName of antSet) {
-      const rec = this.muscleNodes.get(mName);
-      if (!rec) continue;
-      for (const m of rec.meshes) {
-        m.material.opacity = 0.48 - 0.20 * this.contraction;
+
+    // 3. Rigidly rotate visible distal-limb rider muscles (prevents floating ghost muscles!)
+    if (this.options.showAllMusclesGhost) {
+      for (const mName of this._activeRiderMuscles) {
+        const rec = this.muscleNodes.get(mName);
+        if (!rec) continue;
+        this._deformRiderMuscle(rec, _vPivot, _qRot, onlyRight);
+        this._deformedMuscles.add(mName);
       }
     }
 
+    const agStrainPct = agStrainN ? Math.round((agStrainSum / agStrainN) * 100) : 0;
+    const antStrainPct = antStrainN ? Math.round((antStrainSum / antStrainN) * 100) : 0;
+    const agBulgePct = Math.round(agBulgeMax * 100);
+
+    this.lastTelemetry = {
+      agonistStrainPct: agStrainPct,     // positive = shortening (e.g. +24% shorter -> displayed as -24% length)
+      agonistBulgePct: agBulgePct,       // e.g. +28% mid-belly diameter
+      antagonistStrainPct: antStrainPct, // negative = lengthening (e.g. -18% -> displayed as +18% stretch)
+    };
+
     this._updateVectorOverlay(performance.now() * 0.001);
+    return this.lastTelemetry;
+  }
+
+  _deformBridgingMuscle(rec, rig, pivot, qRot, qHalf, uAct, onlyRight) {
+    _vOrig.set(...rig.origin);
+    _vIns0.set(...rig.insertion);
+    _vLift.set(...(rig.liftDir || [0, 0, 1])).normalize();
+
+    // Exact live distal insertion on the articulated bone: J + R(theta) * (I0 - J)
+    _vInsLive.copy(_vIns0).sub(pivot).applyQuaternion(qRot).add(pivot);
+    _vInsStart.copy(_vIns0).sub(pivot).applyQuaternion(_qStart).add(pivot);
+
+    _vD0.copy(_vIns0).sub(_vOrig);
+    const L0 = Math.max(0.02, _vD0.length());
+    _vT0.copy(_vD0).divideScalar(L0);
+
+    const hasPulley = Boolean(rig.pulley);
+    let strain = 0;
+
+    if (hasPulley) {
+      _vPulley.set(...rig.pulley);
+      const startDist = _vPulley.distanceTo(_vOrig) + _vInsStart.distanceTo(_vPulley);
+      const liveDist = _vPulley.distanceTo(_vOrig) + _vInsLive.distanceTo(_vPulley);
+      strain = (startDist - liveDist) / Math.max(0.05, startDist);
+    } else {
+      const Lstart = Math.max(0.02, _vInsStart.distanceTo(_vOrig));
+      const Llive = Math.max(0.02, _vInsLive.distanceTo(_vOrig));
+      strain = (Lstart - Llive) / Lstart;
+    }
+
+    const bulgeGain = rig.bulgeGain ?? 0.28;
+    const liftMax = rig.liftMax ?? 0.014;
+    // Physical Poisson constant-volume expansion + active sarcomere recruitment bulge
+    const bulgeMag = Math.max(-0.22, Math.min(0.46, 0.75 * strain + bulgeGain * uAct));
+    const liftMag = liftMax * uAct;
+
+    // Mid-belly Quadratic Bezier control point wraps smoothly around the joint instead of cutting through bone!
+    _vMid0.copy(_vOrig).add(_vIns0).multiplyScalar(0.5);
+    _vA.copy(_vMid0).sub(pivot).applyQuaternion(qHalf).add(pivot); // Partially rotated rest midpoint
+    _vB.copy(_vOrig).add(_vInsLive).multiplyScalar(0.5);            // Direct chord midpoint
+    _vMidLive.lerpVectors(_vB, _vA, 0.42).addScaledVector(_vLift, liftMag);
+
+    for (const mesh of rec.meshes) {
+      const posAttr = mesh.geometry.attributes.position;
+      const dst = posAttr.array;
+      const src = mesh.userData.origPos;
+      const n = posAttr.count;
+
+      for (let i = 0; i < n; i++) {
+        const ix = i * 3;
+        const vx = src[ix], vy = src[ix + 1], vz = src[ix + 2];
+
+        // Leave contralateral side untouched on bilateral BP3D meshes
+        if (onlyRight && vx > 0.014) {
+          dst[ix] = vx; dst[ix + 1] = vy; dst[ix + 2] = vz;
+          continue;
+        }
+
+        // Longitudinal parameter s in [0, 1] along rest muscle line O0 -> I0
+        const rx = vx - _vOrig.x, ry = vy - _vOrig.y, rz = vz - _vOrig.z;
+        const sRaw = (rx * _vT0.x + ry * _vT0.y + rz * _vT0.z) / L0;
+        const s = sRaw < 0 ? 0 : (sRaw > 1 ? 1 : sRaw);
+
+        // Rest centerline point c0(s) and radial cross-section offset r0 = v0 - c0(s)
+        _vR0.set(
+          vx - (_vOrig.x + s * _vD0.x),
+          vy - (_vOrig.y + s * _vD0.y),
+          vz - (_vOrig.z + s * _vD0.z)
+        );
+
+        // Smooth belly envelope: 0 at bony tendon attachments (s=0,1), peak 1.0 at mid-belly
+        const bell = Math.pow(Math.sin(Math.PI * s), 1.3);
+        const radScale = 1.0 + bulgeMag * bell;
+
+        if (hasPulley) {
+          // Pulley-wrapped Quadriceps kinematics:
+          // Above patella (s < 0.85): fibers slide axially with excursion & bulge anteriorly
+          // Below patella (s >= 0.85): distal patellar tendon bends around knee onto rotating tibia
+          const deltaL = _vInsLive.distanceTo(_vPulley) - _vIns0.distanceTo(_vPulley);
+          if (s < 0.85) {
+            const slide = (s / 0.85) * deltaL;
+            dst[ix] = _vOrig.x + s * _vD0.x + _vT0.x * slide + _vR0.x * radScale + _vLift.x * (liftMag * bell);
+            dst[ix + 1] = _vOrig.y + s * _vD0.y + _vT0.y * slide + _vR0.y * radScale + _vLift.y * (liftMag * bell);
+            dst[ix + 2] = _vOrig.z + s * _vD0.z + _vT0.z * slide + _vR0.z * radScale + _vLift.z * (liftMag * bell);
+          } else {
+            const wDist = (s - 0.85) / 0.15;
+            const wSmooth = wDist * wDist * (3 - 2 * wDist);
+            _vC.set(vx, vy, vz).sub(pivot).applyQuaternion(qRot).add(pivot);
+            dst[ix] = vx + (_vC.x - vx) * wSmooth;
+            dst[ix + 1] = vy + (_vC.y - vy) * wSmooth;
+            dst[ix + 2] = vz + (_vC.z - vz) * wSmooth;
+          }
+        } else {
+          // Quadratic Bezier centerline c(s) = (1-s)^2*O + 2(1-s)s*M + s^2*I_live
+          const om = 1.0 - s;
+          const b0 = om * om;
+          const b1 = 2.0 * om * s;
+          const b2 = s * s;
+          _vCenter.set(
+            b0 * _vOrig.x + b1 * _vMidLive.x + b2 * _vInsLive.x,
+            b0 * _vOrig.y + b1 * _vMidLive.y + b2 * _vInsLive.y,
+            b0 * _vOrig.z + b1 * _vMidLive.z + b2 * _vInsLive.z
+          );
+
+          // Exact Bezier tangent T(s) = 2(1-s)(M - O) + 2s(I_live - M)
+          _vTang.set(
+            2.0 * om * (_vMidLive.x - _vOrig.x) + 2.0 * s * (_vInsLive.x - _vMidLive.x),
+            2.0 * om * (_vMidLive.y - _vOrig.y) + 2.0 * s * (_vInsLive.y - _vMidLive.y),
+            2.0 * om * (_vMidLive.z - _vOrig.z) + 2.0 * s * (_vInsLive.z - _vMidLive.z)
+          );
+          if (_vTang.lengthSq() > 1e-8) {
+            _vTang.normalize();
+            _qFrame.setFromUnitVectors(_vT0, _vTang);
+            _vR0.applyQuaternion(_qFrame);
+          }
+
+          dst[ix] = _vCenter.x + _vR0.x * radScale;
+          dst[ix + 1] = _vCenter.y + _vR0.y * radScale;
+          dst[ix + 2] = _vCenter.z + _vR0.z * radScale;
+        }
+      }
+
+      posAttr.needsUpdate = true;
+      mesh.geometry.computeVertexNormals();
+    }
+
+    return { strain, bulgePeak: Math.max(0, bulgeMag) };
+  }
+
+  _deformStabilizerMuscle(rec, rig, uAct, onlyRight) {
+    _vOrig.set(...rig.origin);
+    _vIns0.set(...rig.insertion);
+    _vLift.set(...(rig.liftDir || [0, 0, -1])).normalize();
+    _vD0.copy(_vIns0).sub(_vOrig);
+    const L0 = Math.max(0.02, _vD0.length());
+    _vT0.copy(_vD0).divideScalar(L0);
+    const bulgeMag = (rig.bulgeGain ?? 0.16) * uAct;
+    const liftMag = (rig.liftMax ?? 0.007) * uAct;
+
+    for (const mesh of rec.meshes) {
+      const posAttr = mesh.geometry.attributes.position;
+      const dst = posAttr.array;
+      const src = mesh.userData.origPos;
+      const n = posAttr.count;
+      for (let i = 0; i < n; i++) {
+        const ix = i * 3;
+        const vx = src[ix], vy = src[ix + 1], vz = src[ix + 2];
+        if (onlyRight && vx > 0.014) {
+          dst[ix] = vx; dst[ix + 1] = vy; dst[ix + 2] = vz;
+          continue;
+        }
+        const sRaw = ((vx - _vOrig.x) * _vT0.x + (vy - _vOrig.y) * _vT0.y + (vz - _vOrig.z) * _vT0.z) / L0;
+        const s = sRaw < 0 ? 0 : (sRaw > 1 ? 1 : sRaw);
+        const bell = Math.pow(Math.sin(Math.PI * s), 1.3);
+        const cx = _vOrig.x + s * _vD0.x;
+        const cy = _vOrig.y + s * _vD0.y;
+        const cz = _vOrig.z + s * _vD0.z;
+        const radScale = 1.0 + bulgeMag * bell;
+        dst[ix] = cx + (vx - cx) * radScale + _vLift.x * (liftMag * bell);
+        dst[ix + 1] = cy + (vy - cy) * radScale + _vLift.y * (liftMag * bell);
+        dst[ix + 2] = cz + (vz - cz) * radScale + _vLift.z * (liftMag * bell);
+      }
+      posAttr.needsUpdate = true;
+      mesh.geometry.computeVertexNormals();
+    }
+    return { strain: 0.04 * uAct, bulgePeak: Math.max(0, bulgeMag) };
+  }
+
+  _deformRiderMuscle(rec, pivot, qRot, onlyRight) {
+    for (const mesh of rec.meshes) {
+      const posAttr = mesh.geometry.attributes.position;
+      const dst = posAttr.array;
+      const src = mesh.userData.origPos;
+      const n = posAttr.count;
+      for (let i = 0; i < n; i++) {
+        const ix = i * 3;
+        const vx = src[ix], vy = src[ix + 1], vz = src[ix + 2];
+        if (onlyRight && vx > 0.014) {
+          dst[ix] = vx; dst[ix + 1] = vy; dst[ix + 2] = vz;
+          continue;
+        }
+        _vC.set(vx, vy, vz).sub(pivot).applyQuaternion(qRot).add(pivot);
+        dst[ix] = _vC.x; dst[ix + 1] = _vC.y; dst[ix + 2] = _vC.z;
+      }
+      posAttr.needsUpdate = true;
+      mesh.geometry.computeVertexNormals();
+    }
   }
 
   _updateVectorOverlay(timeSec) {
@@ -531,7 +888,6 @@ export class AnatomyScene {
     }
     posAttr.needsUpdate = true;
 
-    // Move force-vector beads from Insertion -> Origin showing active concentric pull direction
     const speed = 0.55 + this.contraction * 0.9;
     for (let i = 0; i < this.forceBeads.length; i++) {
       const t = ((timeSec * speed + i / this.forceBeads.length) % 1);
